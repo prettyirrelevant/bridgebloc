@@ -1,0 +1,7 @@
+{
+  "folders": [
+    { "name": "backend", "path": "./backend" },
+    { "name": "frontend", "path": "./frontend" },
+    { "name": "contracts", "path": "./contracts" }
+  ]
+}
