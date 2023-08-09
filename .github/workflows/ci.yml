@@ -169,3 +169,7 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          flags: backend
+          directory: backend
+          files: .coverage.xml

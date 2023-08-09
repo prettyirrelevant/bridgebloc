@@ -15,7 +15,7 @@ format:
 
 test:
 	@echo "Running tests..."
-	pytest --cov -s
+	pytest --cov -s --cov-report xml:.coverage.xml
 
 runserver:
 	@echo 'Running blockthrift development server...'
