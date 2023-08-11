@@ -192,7 +192,8 @@ good-names=i,
            ex,
            Run,
            _,
-           w3
+           w3,
+           e
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
@@ -434,7 +435,9 @@ disable=raw-checker-failed,
         unused-argument,
         missing-class-docstring,
         missing-module-docstring,
-        missing-function-docstring
+        missing-function-docstring,
+        wrong-import-position,
+        wrong-import-order
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

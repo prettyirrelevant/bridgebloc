@@ -841,41 +841,29 @@ coreapi = ["coreapi (>=2.0.0)"]
 markdown = ["types-Markdown (>=0.1.5)"]
 
 [[package]]
-name = "drf-spectacular"
-version = "0.26.4"
-description = "Sane and flexible OpenAPI 3 schema generation for Django REST framework"
+name = "drf-yasg"
+version = "1.21.7"
+description = "Automated generation of real Swagger/OpenAPI 2.0 schemas from Django Rest Framework code."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "drf-spectacular-0.26.4.tar.gz", hash = "sha256:8f5a8f87353d1bb8dcb3f3909b7109b2dcbe1d91f3e069409cf322963e140bd6"},
-    {file = "drf_spectacular-0.26.4-py3-none-any.whl", hash = "sha256:afeccc6533dcdb4e78afbfcc49f3c5e9c369aeb62f965e4d1a43b165449c147a"},
+    {file = "drf-yasg-1.21.7.tar.gz", hash = "sha256:4c3b93068b3dfca6969ab111155e4dd6f7b2d680b98778de8fd460b7837bdb0d"},
+    {file = "drf_yasg-1.21.7-py3-none-any.whl", hash = "sha256:f85642072c35e684356475781b7ecf5d218fff2c6185c040664dd49f0a4be181"},
 ]
 
 [package.dependencies]
-Django = ">=2.2"
+django = ">=2.2.16"
 djangorestframework = ">=3.10.3"
 inflection = ">=0.3.1"
-jsonschema = ">=2.6.0"
-PyYAML = ">=5.1"
-uritemplate = ">=2.0.0"
+packaging = ">=21.0"
+pytz = ">=2021.1"
+pyyaml = ">=5.1"
+swagger-spec-validator = {version = ">=2.1.0", optional = true, markers = "extra == \"validation\""}
+uritemplate = ">=3.0.0"
 
 [package.extras]
-offline = ["drf-spectacular-sidecar"]
-sidecar = ["drf-spectacular-sidecar"]
-
-[[package]]
-name = "drf-spectacular-sidecar"
-version = "2023.8.1"
-description = "Serve self-contained distribution builds of Swagger UI and Redoc with Django"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "drf-spectacular-sidecar-2023.8.1.tar.gz", hash = "sha256:79b928d75b8f7c07d2188dda33ea10ca90d4f7234af5788dda58dc4434cd27f8"},
-    {file = "drf_spectacular_sidecar-2023.8.1-py3-none-any.whl", hash = "sha256:aa9027e8aadb907bb6be486a7219f1474ab678914cae8aebf34445f02e80bdca"},
-]
-
-[package.dependencies]
-Django = ">=2.2"
+coreapi = ["coreapi (>=2.3.3)", "coreschema (>=0.0.4)"]
+validation = ["swagger-spec-validator (>=2.1.0)"]
 
 [[package]]
 name = "eth-abi"
@@ -2046,17 +2034,6 @@ for-tests = ["coverage", "django-tables2", "django-tastypie", "factory-boy", "py
 with-django = ["Django"]
 
 [[package]]
-name = "pylint-per-file-ignores"
-version = "1.3.0"
-description = "A pylint plugin to ignore error codes per file."
-optional = false
-python-versions = ">=3.8.1,<4.0.0"
-files = [
-    {file = "pylint_per_file_ignores-1.3.0-py3-none-any.whl", hash = "sha256:9711b778dbc58a57b5d8965bb9964a0e84a3d6a922bcd4b6588631d2df7735e7"},
-    {file = "pylint_per_file_ignores-1.3.0.tar.gz", hash = "sha256:45e3222121b24183c43664d20a9bccd0972cf5de0d7f4af386adb0f74f0019d1"},
-]
-
-[[package]]
 name = "pylint-plugin-utils"
 version = "0.8.2"
 description = "Utilities and helpers for writing Pylint plugins"
@@ -2603,6 +2580,22 @@ pure-eval = "*"
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
+name = "swagger-spec-validator"
+version = "3.0.3"
+description = "Validation of Swagger specifications"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "swagger-spec-validator-3.0.3.tar.gz", hash = "sha256:16a5ce08c772824a77b1a4a05efc047d72eef1ed53fb969dfe0a18f437ac30a8"},
+    {file = "swagger_spec_validator-3.0.3-py2.py3-none-any.whl", hash = "sha256:174b5de4ab0899df9a57d35c880aaa515511c4b8b578d9d519b09a9596537055"},
+]
+
+[package.dependencies]
+jsonschema = "*"
+pyyaml = "*"
+typing-extensions = "*"
+
+[[package]]
 name = "termcolor"
 version = "2.3.0"
 description = "ANSI color formatting for output in terminal"
@@ -3063,4 +3056,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4517ed80b9bb7c47a12d92a1d5d052e017fdefeb93b3a0db924510a6249d96bc"
+content-hash = "d3f09d630b212d860326686dd4af6db15e12d61e8ac925b63f87cb4c7b4138db"

@@ -9,6 +9,11 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+# isort: off
+import django_stubs_ext
+
+django_stubs_ext.monkeypatch()
+# isort: on
 
 from pathlib import Path
 from typing import Any
@@ -45,14 +50,17 @@ if DEBUG:
     DJANGO_APPS.insert(5, 'whitenoise.runserver_nostatic')
 
 THIRD_PARTY_APPS = [
+    'drf_yasg',
     'extra_checks',
     'rest_framework',
-    'drf_spectacular',
     'huey.contrib.djhuey',
-    'drf_spectacular_sidecar',
 ]
 
-LOCAL_APPS: list[str] = ['bridgebloc.apps.core']
+LOCAL_APPS: list[str] = [
+    'bridgebloc.apps.core',
+    'bridgebloc.apps.tokens',
+    'bridgebloc.apps.accounts',
+]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -76,6 +84,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'pyinstrument.middleware.ProfilerMiddleware',
 ]
 
 
@@ -184,21 +193,9 @@ X_FRAME_OPTIONS = 'DENY'
 REST_FRAMEWORK: dict[str, Any] = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append('rest_framework.renderers.BrowsableAPIRenderer')
-
-
-# ==============================================================================
-# DRF SPECTACULAR SETTINGS
-# ==============================================================================
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'BridgeBloc API',
-    'DESCRIPTION': 'BridgeBloc API',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-}
 
 
 # ==============================================================================
@@ -237,7 +234,7 @@ EXTRA_CHECKS = {
         'drf-model-serializer-extra-kwargs',
         {
             'id': 'drf-model-serializer-meta-attribute',
-            'attrs': ['read_only_fields', 'fields'],
+            'attrs': ['fields'],
             'level': 'CRITICAL',
         },
     ],
