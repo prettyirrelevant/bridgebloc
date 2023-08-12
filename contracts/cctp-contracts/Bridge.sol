@@ -22,8 +22,8 @@ contract CrossChainBridge {
     mapping(address => uint256) public tokenFee;
     mapping(address => bool) public bridgeAdmins;
 
-    event BridgeDepositReceived(uint32 sourceChain, uint32 destinationChain, uint64 nonce, uint256 amount, address indexed from, address indexed recipient, address destinationToken);
-    event Withdrawal(address indexed recipient, uint64 nonce, uint256 amount, address token);
+    event BridgeDepositReceived(uint32 sourceChain, uint32 destinationChain, uint64 nonce, uint256 amount, address indexed from, address indexed recipient, address indexed destinationToken);
+    event BridgeWithdrawalMade(address indexed recipient, uint64 nonce, uint256 amount, address indexed token);
 
     constructor(address[] memory supportedTokens, address swapRouterAddr, address usdcTokenAddr, address tokenMessengerAddr, address messageTransmitterAddr, uint32 domain) {
         for (uint256 i = 0; i < supportedTokens.length; i++) {
