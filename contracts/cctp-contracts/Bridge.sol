@@ -96,6 +96,6 @@ contract CrossChainBridge {
         } else {
             usdcToken.transfer(recipientAddress, amountOut);
         }
-        emit Withdrawal(recipientAddress, nonce, amountOut, destinationToken);
+        emit BridgeWithdrawalMade(recipientAddress, nonce, amountOut, destinationToken);
     }
 }
