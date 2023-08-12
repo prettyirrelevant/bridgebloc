@@ -59,7 +59,7 @@ contract CrossChainBridge {
         });
         amountOut = swapRouter.exactInputSingle(params);
     }
-    
+
     /**
      * @notice Deposit an amount of a supported token to the bridge
      * @param amount Amount of tokens to be deposited to the bridge
@@ -90,15 +90,33 @@ contract CrossChainBridge {
         return nonce;
     }
 
+    /**
+     * @notice Method to add token to the list of supported tokens. Only admin can call this method
+     * @param token Address of the token
+     * @param fee UNISWAP Fee TIER for swaps
+    */
     function addToken(address token, uint24 fee) public onlyAdmin {
         isSupportedToken[token] = true;
         tokenFee[token] = fee;
     }
 
+    /**
+     * @notice Method to add admin to the bridge contract
+     * @param _admin Address of the admin
+    */
     function addAdmin(address _admin) public onlyAdmin {
         bridgeAdmins[_admin] = true;
     }
 
+    /**
+     * @notice Method to recieve tokens and transfer to the recipient on the destination chain. Only a contract admin can call this method
+     * @param message cctp contract message from source chain
+     * @param signature attestation from cctp attestation API for the message
+     * @param nonce message nonce from cctp contract
+     * @param amount Amount of destination token to be sent to recipient
+     * @param destinationToken Token on the recipient receives
+     * @param recipientAddress address of the recipient
+    */
     function sendToRecipient(bytes calldata message, bytes calldata signature, uint64 nonce, uint256 amount, address destinationToken, address recipientAddress) public onlyAdmin {
         require(messageTransmitter.receiveMessage(message, signature), "Receive Message Failed");
         uint256 amountOut = amount;
