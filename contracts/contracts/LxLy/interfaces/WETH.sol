@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.1;
 
 /**
  * @dev Define interface for erc20 wrapped
@@ -10,7 +10,7 @@ interface IWETH {
 
     event  Withdrawal(address indexed src, uint wad);
 
-    function deposit() external;
+    function deposit() payable external;
 
     function withdraw(uint256 wad) external;
 }

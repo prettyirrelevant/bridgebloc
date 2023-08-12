@@ -11,13 +11,10 @@ import "./interfaces/WETH.sol";
 
 contract RollupBridge is PolygonBridgeLib {
     using SafeERC20 for IERC20;
-      /**
-     * @param _polygonZkEVMBridge Polygon zkevm bridge address
-     * @param _counterpartNetwork Couterpart network
-     */
 
     ISwapRouter public immutable swapRouter;
     IWETH public immutable WETH;
+    
     constructor(
         IPolygonZkEVMBridge _polygonZkEVMBridge,
         uint32 _counterpartNetwork,
@@ -42,14 +39,14 @@ contract RollupBridge is PolygonBridgeLib {
      * @param amount Token amount
      * @param token Token address of token sent, 0 address is reserved for ether
      * @param forceUpdateGlobalExitRoot Indicates if the global exit root is updated or not
-     */
+    */
     function bridgeToken(
         address destinationAddress,
         uint256 amount,
         address token,
         bool forceUpdateGlobalExitRoot
     ) external payable {
-        if( _tokenOut == address(0)){
+        if( token == address(0)){
             require( msg.value == amount , "msg value not equal to amount" );
         }else{
             //transfer from sender to this contract and 
@@ -76,7 +73,7 @@ contract RollupBridge is PolygonBridgeLib {
      * @param amount Token amount
      * @param forceUpdateGlobalExitRoot Indicates if the global exit root is updated or not
      */
-    function swapAndBridge(address _tokenIn, address _tokenOut, address destinationAddress, uint256 amount,uint256 _fee, bool forceUpdateGlobalExitRoot)external payable {
+    function swapAndBridge(address _tokenIn, address _tokenOut, address destinationAddress, uint256 amount, uint24 _fee, bool forceUpdateGlobalExitRoot)external payable {
         require(_tokenIn != _tokenOut,"input and output tokens are equal.");
         address swapInputToken = _tokenIn;
         address swapOutputToken = _tokenOut;
@@ -92,14 +89,14 @@ contract RollupBridge is PolygonBridgeLib {
         if(_tokenOut == address(0)){
             WETH.withdraw(amountOut);
         }else{
-            _beforeBridging(token, amount);
+            _beforeBridging(_tokenIn, amount);
         }
         _bridgeAsset(destinationAddress, amountOut, _tokenOut, forceUpdateGlobalExitRoot, bytes(""));
     }
 
 
 
-    function performSwap(address _tokenIn, address _tokenOut, address _recipient, uint256 amount,uint256 _fee) internal returns (uint256 amountOut) {
+    function performSwap(address _tokenIn, address _tokenOut, address _recipient, uint256 amount, uint24 _fee) internal returns (uint256 amountOut) {
             // Approve UNISWAP Router to spend token
             IERC20(_tokenIn).safeTransferFrom(msg.sender, address(this), amount);
             IERC20(_tokenIn).safeApprove(address(swapRouter), amount);
