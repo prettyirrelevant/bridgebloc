@@ -19,7 +19,7 @@ contract CrossChainBridge {
     IMessageTransmitter public immutable messageTransmitter;
 
     mapping(address => bool) public isSupportedToken;
-    mapping(address => uint256) public tokenFee;
+    mapping(address => uint24) public tokenFee;
     mapping(address => bool) public bridgeAdmins;
 
     event BridgeDepositReceived(uint32 sourceChain, uint32 destinationChain, uint64 nonce, uint256 amount, address indexed from, address indexed recipient, address indexed destinationToken);
@@ -50,7 +50,7 @@ contract CrossChainBridge {
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
             tokenIn: _tokenIn,
             tokenOut: _tokenOut,
-            fee: tokenFee[token],
+            fee: tokenFee[_tokenIn],
             recipient: _recipient,
             deadline: block.timestamp,
             amountIn: amount,
@@ -79,7 +79,7 @@ contract CrossChainBridge {
         return nonce;
     }
 
-    function addToken(address token,uint256 fee) public onlyAdmin {
+    function addToken(address token, uint24 fee) public onlyAdmin {
         isSupportedToken[token] = true;
         tokenFee[token] = fee;
     }
