@@ -60,21 +60,32 @@ contract CrossChainBridge {
         amountOut = swapRouter.exactInputSingle(params);
     }
     
-    function deposit(uint256 amount, address token, uint32 destinationDomain, address recipient, address destinationToken, address recipientAddress) public returns (uint64) {
-        require(isSupportedToken[token], "Token not supported");
+    /**
+     * @notice Deposit an amount of a supported token to the bridge
+     * @param amount Amount of tokens to be deposited to the bridge
+     * @param sourceToken The supported token address to be deposited
+     * @param destinationToken The supported token on the destination chain that the user receives
+     * @param recipient The address to receive the destination token on the destination chain
+     * @param destinationDomain CCTP Domain identifier of the destination chain
+     * @param destinationContract Address of the contract on the destination chain where cctp sends the token
+    */
+    function deposit(uint256 amount, address sourceToken, address destinationToken, uint32 destinationDomain, address recipient, address destinationContract) public returns (uint64) {
+        require(isSupportedToken[sourceToken], "Source Token not supported");
+        require(isSupportedToken[destinationToken], "Destination Token not supported");
+
         // Transfer the token from the caller to the bridge contract
-        TransferHelper.safeTransferFrom(token, msg.sender, address(this), amount);
+        TransferHelper.safeTransferFrom(sourceToken, msg.sender, address(this), amount);
         uint256 amountOut = amount;
 
         address usdcAddress = address(usdcToken);
-        if (token != usdcAddress) {
-            amountOut = performSwap(token, usdcAddress, address(this), amount);
+        if (sourceToken != usdcAddress) {
+            amountOut = performSwap(sourceToken, usdcAddress, address(this), amount);
         }
 
         // Approve Token Messenger to Spend the swapped amount
         TransferHelper.safeApprove(address(usdcToken), address(tokenMessenger), amountOut);
         // Move the USDC To CCTP Contract
-        uint64 nonce = tokenMessenger.depositForBurn(amountOut, destinationDomain, BridgeUtil.addressToBytes32(recipientAddress), address(usdcToken));
+        uint64 nonce = tokenMessenger.depositForBurn(amountOut, destinationDomain, BridgeUtil.addressToBytes32(destinationContract), address(usdcToken));
         emit BridgeDepositReceived(CCTP_DOMAIN, destinationDomain, nonce, amountOut, msg.sender, recipient, destinationToken);
         return nonce;
     }
