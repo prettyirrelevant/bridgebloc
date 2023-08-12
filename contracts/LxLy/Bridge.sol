@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.1;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 import "./libraries/PolygonBridgeLib.sol";
 import "./interfaces/WETH.sol";
-import "../../node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../../node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../../node_modules/@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
-contract RollupBridge is PolygonBridgeLib{
+contract RollupBridge is PolygonBridgeLib {
     using SafeERC20 for IERC20;
       /**
      * @param _polygonZkEVMBridge Polygon zkevm bridge address
