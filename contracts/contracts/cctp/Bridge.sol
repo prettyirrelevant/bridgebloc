@@ -9,7 +9,12 @@ import "./interfaces/IMessageTransmitter.sol";
 import "./interfaces/ITokenMessenger.sol";
 import "./libraries/BridgeHelper.sol";
 
-contract CrossChainBridge {
+contract CrossChainBridge is BridgeUtil {
+
+    struct SupportedToken {
+        address token;
+        uint24 fee;
+    }
 
     uint32 public immutable CCTP_DOMAIN;
 
@@ -18,18 +23,17 @@ contract CrossChainBridge {
     ITokenMessenger public immutable tokenMessenger;
     IMessageTransmitter public immutable messageTransmitter;
 
-    mapping(address => bool) public isSupportedToken;
-    mapping(address => uint24) public tokenFee;
+    mapping(address => SupportedToken) public supportedTokens;
     mapping(address => bool) public bridgeAdmins;
 
     event BridgeDepositReceived(uint32 sourceChain, uint32 destinationChain, uint64 nonce, uint256 amount, address indexed from, address indexed recipient, address indexed destinationToken);
     event BridgeWithdrawalMade(address indexed recipient, uint64 nonce, uint256 amount, address indexed token);
 
-    constructor(address[] memory supportedTokens, address swapRouterAddr, address usdcTokenAddr, address tokenMessengerAddr, address messageTransmitterAddr, uint32 domain) {
-        for (uint256 i = 0; i < supportedTokens.length; i++) {
-            isSupportedToken[supportedTokens[i]] = true;
+    constructor(SupportedToken[] memory _supportedTokens, address swapRouterAddr, address usdcTokenAddr, address tokenMessengerAddr, address messageTransmitterAddr, uint32 domain) {
+        for (uint256 i = 0; i < _supportedTokens.length; i++) {
+            require(_supportedTokens[i].token != address(0), "Invalid Supported Token");
+            supportedTokens[_supportedTokens[i].token] = _supportedTokens[i];
         }
-
         swapRouter = ISwapRouter(swapRouterAddr);
         usdcToken = IERC20(usdcTokenAddr);
         tokenMessenger = ITokenMessenger(tokenMessengerAddr);
@@ -50,7 +54,7 @@ contract CrossChainBridge {
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
             tokenIn: _tokenIn,
             tokenOut: _tokenOut,
-            fee: tokenFee[_tokenIn],
+            fee: supportedTokens[_tokenIn].fee,
             recipient: _recipient,
             deadline: block.timestamp,
             amountIn: amount,
@@ -70,8 +74,10 @@ contract CrossChainBridge {
      * @param destinationContract Address of the contract on the destination chain where cctp sends the token
     */
     function deposit(uint256 amount, address sourceToken, address destinationToken, uint32 destinationDomain, address recipient, address destinationContract) public returns (uint64) {
-        require(isSupportedToken[sourceToken], "Source Token not supported");
-        require(isSupportedToken[destinationToken], "Destination Token not supported");
+        SupportedToken storage supportedSourceToken = supportedTokens[sourceToken];
+        SupportedToken storage supportedDestToken = supportedTokens[destinationToken];
+        require(supportedSourceToken.token != address(0), "Source Token not supported");
+        require(supportedDestToken.token != address(0), "Destination Token not supported");
 
         // Transfer the token from the caller to the bridge contract
         TransferHelper.safeTransferFrom(sourceToken, msg.sender, address(this), amount);
@@ -85,7 +91,7 @@ contract CrossChainBridge {
         // Approve Token Messenger to Spend the swapped amount
         TransferHelper.safeApprove(address(usdcToken), address(tokenMessenger), amountOut);
         // Move the USDC To CCTP Contract
-        uint64 nonce = tokenMessenger.depositForBurn(amountOut, destinationDomain, BridgeUtil.addressToBytes32(destinationContract), address(usdcToken));
+        uint64 nonce = tokenMessenger.depositForBurn(amountOut, destinationDomain, addressToBytes32(destinationContract), address(usdcToken));
         emit BridgeDepositReceived(CCTP_DOMAIN, destinationDomain, nonce, amountOut, msg.sender, recipient, destinationToken);
         return nonce;
     }
@@ -96,8 +102,21 @@ contract CrossChainBridge {
      * @param fee UNISWAP Fee TIER for swaps
     */
     function addToken(address token, uint24 fee) public onlyAdmin {
-        isSupportedToken[token] = true;
-        tokenFee[token] = fee;
+        require(token != address(0), "Invalid token address");
+        SupportedToken storage newToken = supportedTokens[token];
+        newToken.token = token;
+        newToken.fee = fee;
+    }
+
+    /**
+     * @notice Method to remove token from the list of supported tokens. Only admin can call this method
+     * @param _token Address of the token
+    */
+    function removeToken(address _token) public onlyAdmin {
+        require(_token != address(0), "Invalid token address");
+        SupportedToken storage token = supportedTokens[_token];
+        token.token = address(0);
+        token.fee = 0;
     }
 
     /**
@@ -106,6 +125,14 @@ contract CrossChainBridge {
     */
     function addAdmin(address _admin) public onlyAdmin {
         bridgeAdmins[_admin] = true;
+    }
+
+    /**
+     * @notice Method to remove admin to the bridge contract
+     * @param _admin Address of the admin
+    */
+    function removeAdmin(address _admin) public onlyAdmin {
+        bridgeAdmins[_admin] = false;
     }
 
     /**
