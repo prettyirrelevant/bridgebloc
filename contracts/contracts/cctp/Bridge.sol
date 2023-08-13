@@ -124,6 +124,7 @@ contract CrossChainBridge is BridgeUtil {
      * @param _admin Address of the admin
     */
     function addAdmin(address _admin) public onlyAdmin {
+        require(_admin != address(0), "Invalid Address");
         bridgeAdmins[_admin] = true;
     }
 
@@ -132,6 +133,7 @@ contract CrossChainBridge is BridgeUtil {
      * @param _admin Address of the admin
     */
     function removeAdmin(address _admin) public onlyAdmin {
+        require(_admin != address(0), "Invalid Address");
         bridgeAdmins[_admin] = false;
     }
 

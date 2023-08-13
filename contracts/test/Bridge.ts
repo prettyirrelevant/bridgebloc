@@ -15,8 +15,6 @@ describe("CCTP Bridge Tests", function () {
     beforeEach(async function () {
         // Deploy the cctp bridge
         cctpBridge = await ethers.deployContract("CrossChainBridge", [SUPPORTED_TOKENS, UNISWAP_ROUTER, USDC_ADDRESS, TOKEN_MESSENGER, MESSAGE_TRANSMITTER, CCTP_DOMAIN]);
-        const address = await cctpBridge.getAddress()
-        console.log(`CCTP BRIDGE DEPLOYED AT ${address}`)
     });
 
     it("confirm every state variable in the smart contract", async function () {
@@ -50,5 +48,14 @@ describe("CCTP Bridge Tests", function () {
         const res3 = await cctpBridge.supportedTokens(newToken.token);
         expect(res3[0]).to.equal(zeroAddress);
         expect(res3[1]).to.equal(0);
+    });
+
+    it("Test Adding and Removing admins",async () => {
+        const [ _, newAdmin ] = await ethers.getSigners();
+        expect(await cctpBridge.bridgeAdmins(newAdmin.address)).to.equal(false);
+        await cctpBridge.addAdmin(newAdmin.address);
+        expect(await cctpBridge.bridgeAdmins(newAdmin.address)).to.equal(true);
+        await cctpBridge.removeAdmin(newAdmin.address);
+        expect(await cctpBridge.bridgeAdmins(newAdmin.address)).to.equal(false);
     });
 })
