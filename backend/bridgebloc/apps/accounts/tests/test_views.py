@@ -10,7 +10,7 @@ from rest_framework.test import APIClient
 
 @pytest.mark.django_db()
 def test_nonce_endpoint(api_client: APIClient) -> None:
-    account = Account.create()
+    account = Account.create()  # pylint:disable=no-value-for-parameter
     response = api_client.get(f'/api/accounts/nonce/{account.address}')
 
     nonce_from_cache = cache.get(account.address)

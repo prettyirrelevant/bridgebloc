@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _populate_testnet_token_data() -> None:
-        token_addresses = {
+        token_addresses: dict[ChainID, list[tuple[str, str]]] = {
             ChainID.ETHEREUM_TESTNET: [
                 ('0x9D233A907E065855D2A9c7d4B552ea27fB2E5a36', 'dai'),
                 ('0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6', 'weth'),

@@ -34,7 +34,7 @@ def initiate_circle_api_payment_intent(token_conversion_id: UUID) -> None:
             metadata=result['data'],
             conversion=token_conversion,
             status=CircleAPIConversionStepStatus.PENDING,
-            step_type=CircleAPIConversionStepType.CREATE_PAYMENT_INTENT,
+            step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
         )
         logger.info(f'Initiated Circle API payment intent for Token Conversion: {token_conversion_id}')
     except Exception as e:
@@ -49,7 +49,7 @@ def poll_circle_for_deposit_addresses() -> None:
     try:
         steps_needing_deposit_addresses = CircleAPIConversionStep.objects.filter(
             status=CircleAPIConversionStepStatus.PENDING,
-            step_type=CircleAPIConversionStepType.CREATE_PAYMENT_INTENT,
+            step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
         )
         logger.info(f'Found {steps_needing_deposit_addresses.count()} steps requiring deposit addresses.')
 
@@ -92,7 +92,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
         logger.info(f'Found {steps_needing_deposit_addresses.count()} steps requiring deposit confirmation.')
 
         for step in steps_needing_deposit_addresses:
-            logger.info(f'Checking deposit confirmation for step {step.id}...')
+            logger.info(f'Checking deposit confirmation for step {step.uuid}...')
 
             circle_client = get_circle_api_client(step.conversion.source_chain)
             response = circle_client.get_payment_intent(step.metadata['id'])
@@ -102,7 +102,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
                 step.status = CircleAPIConversionStepStatus.FAILED
                 step.save()
 
-                logger.warning(f'Step {step.id} failed due to expiration of payment intent.')
+                logger.warning(f'Step {step.uuid} failed due to expiration of payment intent.')
                 continue
 
             if (
@@ -111,14 +111,14 @@ def check_for_circle_api_deposit_confirmation() -> None:
                 or len(response['data']['paymentIds']) < 1
                 or response['data']['amountPaid']['amount'] < step.conversion.amount
             ):
-                logger.info(f'Deposit confirmation for step {step.id} is not complete or accurate. Skipping...')
+                logger.info(f'Deposit confirmation for step {step.uuid} is not complete or accurate. Skipping...')
                 continue
 
             step.status = CircleAPIConversionStepStatus.SUCCESSFUL
             step.metadata = response['data']
             step.save()
 
-            logger.info(f'Deposit confirmation for step {step.id} succeeded. Proceeding to next step...')
+            logger.info(f'Deposit confirmation for step {step.uuid} succeeded. Proceeding to next step...')
 
             CircleAPIConversionStep.objects.create(
                 metadata={},
@@ -145,7 +145,7 @@ def send_to_recipient_using_circle_api() -> None:
         logger.info(f'Found {steps_needing_withdrawal.count()} steps requiring withdrawal.')
 
         for step in steps_needing_withdrawal:
-            logger.info(f'Processing step {step.id} for withdrawal to recipient...')
+            logger.info(f'Processing step {step.uuid} for withdrawal to recipient...')
 
             circle_client = get_circle_api_client(step.conversion.source_chain)
             response = circle_client.make_withdrawal(
@@ -157,7 +157,7 @@ def send_to_recipient_using_circle_api() -> None:
             step.metadata = response['data']
             step.save()
 
-            logger.info(f'Withdrawal initiated for step {step.id}.')
+            logger.info(f'Withdrawal initiated for step {step.uuid}.')
 
         logger.info('Circle API withdrawal process completed successfully.')
     except Exception as e:
@@ -177,7 +177,7 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
         logger.info(f'Found {steps_needing_withdrawal.count()} steps needing withdrawal confirmation.')
 
         for step in steps_needing_withdrawal:
-            logger.info(f'Checking withdrawal confirmation for step {step.id}...')
+            logger.info(f'Checking withdrawal confirmation for step {step.uuid}...')
             circle_client = get_circle_api_client(step.conversion.source_chain)
             response = circle_client.get_withdrawal_info(step.metadata['id'])
             if response['data']['status'] == 'running' and response['data']['transactionHash'] is not None:
@@ -185,14 +185,14 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
                 step.status = CircleAPIConversionStepStatus.SUCCESSFUL
                 step.save()
 
-                logger.info(f'Withdrawal for step {step.id} confirmed and marked as successful.')
+                logger.info(f'Withdrawal for step {step.uuid} confirmed and marked as successful.')
 
             if response['data']['status'] == 'failed':
                 error_code = response['data']['errorCode']
                 step.metadata = {}
                 step.save()
 
-                logger.warning(f'Withdrawal for step {step.id} failed with error code {error_code}. Will retry...')
+                logger.warning(f'Withdrawal for step {step.uuid} failed with error code {error_code}. Will retry...')
 
         logger.info('Withdrawals confirmation check completed.')
     except Exception as e:

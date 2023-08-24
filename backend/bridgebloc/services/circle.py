@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Any, Literal
 
 import requests
-from eth_utils import to_checksum_address
+from eth_utils.address import to_checksum_address
 
 
 class CircleAPI:
@@ -15,7 +15,13 @@ class CircleAPI:
     def _build_url(self, endpoint: str) -> str:
         return f'{self.base_url}/{endpoint}'
 
-    def _request(self, method: Literal['GET', 'POST'], endpoint: str, params=None, data=None) -> requests.Response:
+    def _request(
+        self,
+        method: Literal['GET', 'POST'],
+        endpoint: str,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> requests.Response:
         headers = {
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json',
@@ -78,7 +84,11 @@ class CircleAPI:
         return response.json()
 
     def get_withdrawal_info(self, withdrawal_id: str) -> dict[str, Any]:
-        ...
+        response = self._request(
+            method='POST',
+            endpoint=f'v1/transfers/{withdrawal_id}',
+        )
+        return response.json()
 
     def add_recipient(self, address: str, chain: str) -> dict[str, Any]:
         response = self._request(

@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from bridgebloc.common.helpers import success_response
+from bridgebloc.common.types import AuthenticatedRequest
 
 from .constants import VALID_CONVERSION_ROUTES
 from .models import TokenConversion
@@ -24,7 +25,7 @@ from .types import ConversionMethod
 
 class ValidTokenConversionRoutesAPIView(APIView):
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
-        data = defaultdict(lambda: defaultdict())
+        data: dict[str, Any] = defaultdict(lambda: defaultdict())  # pylint:disable=unnecessary-lambda
         for key, val in VALID_CONVERSION_ROUTES.items():
             for k, v in val.items():
                 data[key.name.lower()][k.name.lower()] = v
@@ -47,11 +48,11 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CircleAPITokenConversionInitialisationSerializer
 
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+    def post(self, request: AuthenticatedRequest, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         conversion = TokenConversion.objects.create(
-            creator=self.request.user,
+            creator=request.user,
             amount=serializer.data['amount'],
             conversion_type=ConversionMethod.CIRCLE_API,
             source_chain=serializer.data['source_chain'],
@@ -68,12 +69,12 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
 class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
     serializer_class = LxLyTokenConversionInitialisationSerializer
 
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        ...
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+        return success_response(data=None)
 
 
 class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
     serializer_class = CCTPTokenConversionInitialisationSerializer
 
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        ...
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+        return success_response(data=None)

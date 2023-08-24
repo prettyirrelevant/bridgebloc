@@ -26,7 +26,7 @@ class NonceAPIView(APIView):
         return success_response({'nonce': nonce, 'checksum_address': address})
 
     @staticmethod
-    def validate_address(address) -> ChecksumAddress:
+    def validate_address(address: str) -> ChecksumAddress:
         if not is_address(address):
             raise ParseError(detail='Address provided is not valid')
 
