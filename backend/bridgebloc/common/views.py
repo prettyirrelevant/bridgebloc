@@ -28,7 +28,7 @@ def custom_exception_handler(exception: Exception, context: dict) -> Response | 
     if isinstance(exception, APIException):
         return error_response(
             message=exception.__class__.__name__,
-            errors=exception.detail,
+            errors=[exception.detail] if isinstance(exception.detail, str) else exception.detail,
             status_code=response.status_code,
         )
 

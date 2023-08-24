@@ -8,12 +8,8 @@ from huey.contrib.djhuey import db_periodic_task, db_task, lock_task
 from django.conf import settings
 from django.utils import timezone
 
-from .models import (
-    CircleAPIConversionStep,
-    CircleAPIConversionStepStatus,
-    CircleAPIConversionStepType,
-    TokenConversion,
-)
+from .enums import CircleAPIConversionStepType, TokenConversionStepStatus
+from .models import TokenConversion, TokenConversionStep
 from .utils import get_circle_api_client
 
 logger = logging.getLogger('huey')
@@ -30,10 +26,10 @@ def initiate_circle_api_payment_intent(token_conversion_id: UUID) -> None:
             amount=token_conversion.amount,
             chain=token_conversion.source_chain.to_circle(),
         )
-        CircleAPIConversionStep.objects.create(
+        TokenConversionStep.objects.create(
             metadata=result['data'],
             conversion=token_conversion,
-            status=CircleAPIConversionStepStatus.PENDING,
+            status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
         )
         logger.info(f'Initiated Circle API payment intent for Token Conversion: {token_conversion_id}')
@@ -47,8 +43,8 @@ def poll_circle_for_deposit_addresses() -> None:
     logger.info('Starting Circle API deposit addresses polling...')
 
     try:
-        steps_needing_deposit_addresses = CircleAPIConversionStep.objects.filter(
-            status=CircleAPIConversionStepStatus.PENDING,
+        steps_needing_deposit_addresses = TokenConversionStep.objects.filter(
+            status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
         )
         logger.info(f'Found {steps_needing_deposit_addresses.count()} steps requiring deposit addresses.')
@@ -62,14 +58,14 @@ def poll_circle_for_deposit_addresses() -> None:
                 logger.info(f'No deposit address found for Token Conversion: {step.conversion.uuid}. Skipping...')
                 continue
 
-            step.status = CircleAPIConversionStepStatus.SUCCESSFUL
+            step.status = TokenConversionStepStatus.SUCCESSFUL
             step.metadata = response['data']
             step.save()
 
-            CircleAPIConversionStep.objects.create(
+            TokenConversionStep.objects.create(
                 metadata=response['data'],
                 conversion=step.conversion,
-                status=CircleAPIConversionStepStatus.PENDING,
+                status=TokenConversionStepStatus.PENDING,
                 step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT,
             )
             logger.info(f'Received deposit address for Token Conversion: {step.conversion.uuid}')
@@ -85,8 +81,8 @@ def check_for_circle_api_deposit_confirmation() -> None:
     logger.info('Starting Circle API deposit confirmation checks...')
 
     try:
-        steps_needing_deposit_addresses = CircleAPIConversionStep.objects.filter(
-            status=CircleAPIConversionStepStatus.PENDING,
+        steps_needing_deposit_addresses = TokenConversionStep.objects.filter(
+            status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT,
         )
         logger.info(f'Found {steps_needing_deposit_addresses.count()} steps requiring deposit confirmation.')
@@ -99,7 +95,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
 
             if datetime.fromisoformat(response['data']['expiresOn']) > timezone.now():
                 step.metadata = response['data']
-                step.status = CircleAPIConversionStepStatus.FAILED
+                step.status = TokenConversionStepStatus.FAILED
                 step.save()
 
                 logger.warning(f'Step {step.uuid} failed due to expiration of payment intent.')
@@ -114,16 +110,16 @@ def check_for_circle_api_deposit_confirmation() -> None:
                 logger.info(f'Deposit confirmation for step {step.uuid} is not complete or accurate. Skipping...')
                 continue
 
-            step.status = CircleAPIConversionStepStatus.SUCCESSFUL
+            step.status = TokenConversionStepStatus.SUCCESSFUL
             step.metadata = response['data']
             step.save()
 
             logger.info(f'Deposit confirmation for step {step.uuid} succeeded. Proceeding to next step...')
 
-            CircleAPIConversionStep.objects.create(
+            TokenConversionStep.objects.create(
                 metadata={},
                 conversion=step.conversion,
-                status=CircleAPIConversionStepStatus.PENDING,
+                status=TokenConversionStepStatus.PENDING,
                 step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
             )
 
@@ -137,9 +133,9 @@ def send_to_recipient_using_circle_api() -> None:
     logger.info('Starting Circle API withdrawal process for recipients...')
 
     try:
-        steps_needing_withdrawal = CircleAPIConversionStep.objects.filter(
+        steps_needing_withdrawal = TokenConversionStep.objects.filter(
             metadata__id__isnull=True,
-            status=CircleAPIConversionStepStatus.PENDING,
+            status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
         )
         logger.info(f'Found {steps_needing_withdrawal.count()} steps requiring withdrawal.')
@@ -169,9 +165,9 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
     logger.info('Starting withdrawal confirmation check for Circle API withdrawals...')
 
     try:
-        steps_needing_withdrawal = CircleAPIConversionStep.objects.filter(
+        steps_needing_withdrawal = TokenConversionStep.objects.filter(
             metadata__id__isnull=False,
-            status=CircleAPIConversionStepStatus.PENDING,
+            status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
         )
         logger.info(f'Found {steps_needing_withdrawal.count()} steps needing withdrawal confirmation.')
@@ -182,7 +178,7 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
             response = circle_client.get_withdrawal_info(step.metadata['id'])
             if response['data']['status'] == 'running' and response['data']['transactionHash'] is not None:
                 step.metadata = response['data']
-                step.status = CircleAPIConversionStepStatus.SUCCESSFUL
+                step.status = TokenConversionStepStatus.SUCCESSFUL
                 step.save()
 
                 logger.info(f'Withdrawal for step {step.uuid} confirmed and marked as successful.')
