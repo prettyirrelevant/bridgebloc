@@ -4,17 +4,44 @@ from eth_utils.address import is_address, to_checksum_address
 
 from rest_framework import serializers
 
-from bridgebloc.apps.conversions.models import TokenConversion
-from bridgebloc.apps.conversions.types import ConversionMethod
-from bridgebloc.apps.conversions.utils import is_valid_route
+from bridgebloc.apps.accounts.serializers import AccountSerializer
 from bridgebloc.apps.tokens.models import Token
+from bridgebloc.apps.tokens.serializers import TokenSerializer
 from bridgebloc.evm.types import ChainID
+
+from .models import TokenConversion, TokenConversionStep
+from .types import ConversionMethod
+from .utils import is_valid_route
+
+
+class TokenConversionStepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TokenConversionStep
+        fields = ('uuid', 'step_type', 'metadata', 'status', 'created_at', 'updated_at')
 
 
 class TokenConversionSerializer(serializers.ModelSerializer):
+    creator = AccountSerializer()
+    source_token = TokenSerializer()
+    destination_token = TokenSerializer()
+    conversion_steps = TokenConversionStepSerializer(many=True)
+
     class Meta:
         model = TokenConversion
-        fields = '__all__'
+        fields = (
+            'uuid',
+            'amount',
+            'creator',
+            'source_chain',
+            'source_token',
+            'conversion_type',
+            'conversion_steps',
+            'destination_token',
+            'destination_chain',
+            'destination_address',
+            'created_at',
+            'updated_at',
+        )
 
 
 class CircleAPITokenConversionInitialisationSerializer(serializers.Serializer):
@@ -68,13 +95,8 @@ class CircleAPITokenConversionInitialisationSerializer(serializers.Serializer):
 
 
 class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
-    source_chain = serializers.CharField(required=True)
-    source_token = serializers.CharField(required=True)
-    source_address = serializers.CharField(required=True)
-    destination_chain = serializers.CharField(required=True)
-    destination_token = serializers.CharField(required=True)
-    destination_address = serializers.CharField(required=True)
-    amount = serializers.DecimalField(required=True, max_digits=16, decimal_places=2)
+    tx_hash = serializers.CharField(required=True)
+    cctp_source_domain = serializers.CharField(required=True)
 
 
 class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):

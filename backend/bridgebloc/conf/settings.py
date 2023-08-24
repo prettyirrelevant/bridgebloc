@@ -195,6 +195,7 @@ X_FRAME_OPTIONS = 'DENY'
 REST_FRAMEWORK: dict[str, Any] = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['bridgebloc.apps.accounts.authentication.Web3Authentication'],
     'EXCEPTION_HANDLER': 'bridgebloc.common.views.custom_exception_handler',
 }
 if DEBUG:

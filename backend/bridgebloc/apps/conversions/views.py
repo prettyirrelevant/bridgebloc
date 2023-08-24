@@ -1,7 +1,10 @@
 from collections import defaultdict
 from typing import Any
 
-from rest_framework.generics import GenericAPIView, RetrieveAPIView
+from django.db.models import QuerySet
+
+from rest_framework import status
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -34,13 +37,27 @@ class ValidTokenConversionRoutesAPIView(APIView):
 
 
 class TokenConversionAPIView(RetrieveAPIView):
-    queryset = TokenConversion.objects.get_queryset()
+    queryset = TokenConversion.objects.select_related('creator').prefetch_related('conversion_steps')
     permission_classes = (IsAuthenticated, IsOwner)
     serializer_class = TokenConversionSerializer
     lookup_field = 'uuid'
 
     def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().retrieve(request, *args, **kwargs)
+        return success_response(data=response.data, status_code=response.status_code)
+
+
+class TokenConversionsAPIView(ListAPIView):
+    queryset = TokenConversion.objects.select_related('creator').prefetch_related('conversion_steps')
+    serializer_class = TokenConversionSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self) -> QuerySet:
+        qs = super().get_queryset()
+        return qs.filter(creator=self.request.user)
+
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: A003
+        response = super().list(request, *args, **kwargs)
         return success_response(data=response.data, status_code=response.status_code)
 
 
@@ -63,10 +80,11 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
         )
 
         initiate_circle_api_payment_intent.schedule((conversion.uuid,), delay=2)
-        return success_response(data={'id': conversion.uuid})
+        return success_response(data={'id': conversion.uuid}, status_code=status.HTTP_201_CREATED)
 
 
 class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     serializer_class = LxLyTokenConversionInitialisationSerializer
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
@@ -74,6 +92,7 @@ class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
 
 
 class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
     serializer_class = CCTPTokenConversionInitialisationSerializer
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
