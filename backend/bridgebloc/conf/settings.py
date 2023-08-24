@@ -9,6 +9,11 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+# isort: off
+import django_stubs_ext
+
+django_stubs_ext.monkeypatch()
+# isort: on
 
 from pathlib import Path
 from typing import Any
@@ -45,14 +50,18 @@ if DEBUG:
     DJANGO_APPS.insert(5, 'whitenoise.runserver_nostatic')
 
 THIRD_PARTY_APPS = [
+    'drf_yasg',
     'extra_checks',
     'rest_framework',
-    'drf_spectacular',
     'huey.contrib.djhuey',
-    'drf_spectacular_sidecar',
 ]
 
-LOCAL_APPS: list[str] = ['bridgebloc.apps.core']
+LOCAL_APPS: list[str] = [
+    'bridgebloc.apps.core',
+    'bridgebloc.apps.tokens',
+    'bridgebloc.apps.accounts',
+    'bridgebloc.apps.conversions',
+]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -68,8 +77,8 @@ ROOT_URLCONF = 'bridgebloc.conf.urls'
 # ==============================================================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -77,6 +86,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+if DEBUG:
+    MIDDLEWARE.append('pyinstrument.middleware.ProfilerMiddleware')
 
 
 # ==============================================================================
@@ -184,21 +195,10 @@ X_FRAME_OPTIONS = 'DENY'
 REST_FRAMEWORK: dict[str, Any] = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'bridgebloc.common.views.custom_exception_handler',
 }
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append('rest_framework.renderers.BrowsableAPIRenderer')
-
-
-# ==============================================================================
-# DRF SPECTACULAR SETTINGS
-# ==============================================================================
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'BridgeBloc API',
-    'DESCRIPTION': 'BridgeBloc API',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-}
 
 
 # ==============================================================================
@@ -226,7 +226,6 @@ EXTRA_CHECKS = {
     'checks': [
         'no-unique-together',
         'no-index-together',
-        'field-choices-constraint',
         'field-default-null',
         'field-related-name',
         'field-foreign-key-db-index',
@@ -237,8 +236,78 @@ EXTRA_CHECKS = {
         'drf-model-serializer-extra-kwargs',
         {
             'id': 'drf-model-serializer-meta-attribute',
-            'attrs': ['read_only_fields', 'fields'],
+            'attrs': ['fields'],
             'level': 'CRITICAL',
         },
     ],
 }
+
+
+# ==============================================================================
+# PYINSTRUMENT SETTINGS
+# ==============================================================================
+PYINSTRUMENT_PROFILE_DIR = BASE_DIR / '.profiles'
+
+
+# ==============================================================================
+# DRF-YASG SETTINGS
+# ==============================================================================
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'wallet_signature': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+        },
+    },
+}
+
+# ==============================================================================
+# CIRCLE API SETTINGS
+# ==============================================================================
+CIRCLE_MASTER_WALLET_ID = env.int('CIRCLE_MASTER_WALLET_ID')
+CIRCLE_SANDBOX_API_KEY = env.str('CIRCLE_SANDBOX_API_KEY')
+CIRCLE_SANDBOX_BASE_URL = env.str('CIRCLE_SANDBOX_BASE_URL')
+CIRCLE_LIVE_API_KEY = env.str('CIRCLE_LIVE_API_KEY')
+CIRCLE_LIVE_BASE_URL = env.str('CIRCLE_LIVE_BASE_URL')
+
+
+# ==============================================================================
+# LOGGING SETTINGS
+# ==============================================================================
+if not DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '[%(asctime)s] %(levelname)s:%(name)s:%(process)d:%(threadName)s: %(message)s',
+            },
+        },
+        'handlers': {
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+            },
+        },
+        'root': {'level': 'INFO', 'handlers': ['console']},
+        'loggers': {
+            'django.request': {
+                'handlers': ['console'],
+                'level': 'ERROR',
+                'propagate': False,
+            },
+            'django.security.DisallowedHost': {
+                'level': 'ERROR',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+            'huey.consumer': {
+                'level': 'INFO',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+        },
+    }

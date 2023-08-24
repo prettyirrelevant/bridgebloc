@@ -192,7 +192,11 @@ good-names=i,
            ex,
            Run,
            _,
-           w3
+           w3,
+           e,
+           f,
+           docs_schema_view,
+           v
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
@@ -434,7 +438,12 @@ disable=raw-checker-failed,
         unused-argument,
         missing-class-docstring,
         missing-module-docstring,
-        missing-function-docstring
+        missing-function-docstring,
+        wrong-import-position,
+        wrong-import-order,
+        logging-fstring-interpolation,
+        broad-exception-caught,
+        abstract-method,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

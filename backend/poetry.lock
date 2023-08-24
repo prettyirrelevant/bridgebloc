@@ -841,41 +841,29 @@ coreapi = ["coreapi (>=2.0.0)"]
 markdown = ["types-Markdown (>=0.1.5)"]
 
 [[package]]
-name = "drf-spectacular"
-version = "0.26.4"
-description = "Sane and flexible OpenAPI 3 schema generation for Django REST framework"
+name = "drf-yasg"
+version = "1.21.7"
+description = "Automated generation of real Swagger/OpenAPI 2.0 schemas from Django Rest Framework code."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "drf-spectacular-0.26.4.tar.gz", hash = "sha256:8f5a8f87353d1bb8dcb3f3909b7109b2dcbe1d91f3e069409cf322963e140bd6"},
-    {file = "drf_spectacular-0.26.4-py3-none-any.whl", hash = "sha256:afeccc6533dcdb4e78afbfcc49f3c5e9c369aeb62f965e4d1a43b165449c147a"},
+    {file = "drf-yasg-1.21.7.tar.gz", hash = "sha256:4c3b93068b3dfca6969ab111155e4dd6f7b2d680b98778de8fd460b7837bdb0d"},
+    {file = "drf_yasg-1.21.7-py3-none-any.whl", hash = "sha256:f85642072c35e684356475781b7ecf5d218fff2c6185c040664dd49f0a4be181"},
 ]
 
 [package.dependencies]
-Django = ">=2.2"
+django = ">=2.2.16"
 djangorestframework = ">=3.10.3"
 inflection = ">=0.3.1"
-jsonschema = ">=2.6.0"
-PyYAML = ">=5.1"
-uritemplate = ">=2.0.0"
+packaging = ">=21.0"
+pytz = ">=2021.1"
+pyyaml = ">=5.1"
+swagger-spec-validator = {version = ">=2.1.0", optional = true, markers = "extra == \"validation\""}
+uritemplate = ">=3.0.0"
 
 [package.extras]
-offline = ["drf-spectacular-sidecar"]
-sidecar = ["drf-spectacular-sidecar"]
-
-[[package]]
-name = "drf-spectacular-sidecar"
-version = "2023.8.1"
-description = "Serve self-contained distribution builds of Swagger UI and Redoc with Django"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "drf-spectacular-sidecar-2023.8.1.tar.gz", hash = "sha256:79b928d75b8f7c07d2188dda33ea10ca90d4f7234af5788dda58dc4434cd27f8"},
-    {file = "drf_spectacular_sidecar-2023.8.1-py3-none-any.whl", hash = "sha256:aa9027e8aadb907bb6be486a7219f1474ab678914cae8aebf34445f02e80bdca"},
-]
-
-[package.dependencies]
-Django = ">=2.2"
+coreapi = ["coreapi (>=2.3.3)", "coreschema (>=0.0.4)"]
+validation = ["swagger-spec-validator (>=2.1.0)"]
 
 [[package]]
 name = "eth-abi"
@@ -902,30 +890,30 @@ tools = ["hypothesis (>=4.18.2,<5.0.0)"]
 
 [[package]]
 name = "eth-account"
-version = "0.9.0"
+version = "0.8.0"
 description = "eth-account: Sign Ethereum transactions and messages with local private keys"
 optional = false
-python-versions = ">=3.7, <4"
+python-versions = ">=3.6, <4"
 files = [
-    {file = "eth-account-0.9.0.tar.gz", hash = "sha256:5f66ecb7bc52569924dfaf4a9add501b1c2a4901eec74e3c0598cd26d0971777"},
-    {file = "eth_account-0.9.0-py3-none-any.whl", hash = "sha256:35636ca14e9063dea233648703338be1a44e8cb1a2f9de1519d2b1be4655da59"},
+    {file = "eth-account-0.8.0.tar.gz", hash = "sha256:ccb2d90a16c81c8ea4ca4dc76a70b50f1d63cea6aff3c5a5eddedf9e45143eca"},
+    {file = "eth_account-0.8.0-py3-none-any.whl", hash = "sha256:0ccc0edbb17021004356ae6e37887528b6e59e6ae6283f3917b9759a5887203b"},
 ]
 
 [package.dependencies]
-bitarray = ">=2.4.0"
-eth-abi = ">=4.0.0-b.2"
-eth-keyfile = ">=0.6.0"
-eth-keys = ">=0.4.0"
-eth-rlp = ">=0.3.0"
-eth-utils = ">=2.0.0"
-hexbytes = ">=0.1.0"
-rlp = ">=1.0.0"
+bitarray = ">=2.4.0,<3"
+eth-abi = ">=3.0.1"
+eth-keyfile = ">=0.6.0,<0.7.0"
+eth-keys = ">=0.4.0,<0.5"
+eth-rlp = ">=0.3.0,<1"
+eth-utils = ">=2.0.0,<3"
+hexbytes = ">=0.1.0,<1"
+rlp = ">=1.0.0,<4"
 
 [package.extras]
-dev = ["black (>=23)", "build (>=0.9.0)", "bumpversion (>=0.5.3)", "coverage", "flake8 (==6.0.0)", "flake8-bugbear (==23.3.23)", "hypothesis (>=4.18.0,<5)", "ipython", "isort (>=5.10.1)", "mypy (==0.971)", "pydocstyle (>=6.0.0)", "pytest (>=7.0.0)", "pytest-watch (>=4.1.0)", "pytest-xdist (>=2.4.0)", "sphinx (>=5.0.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)", "tox (>=4.0.0)", "twine", "wheel"]
-doc = ["sphinx (>=5.0.0)", "sphinx-rtd-theme (>=1.0.0)", "towncrier (>=21,<22)"]
-lint = ["black (>=23)", "flake8 (==6.0.0)", "flake8-bugbear (==23.3.23)", "isort (>=5.10.1)", "mypy (==0.971)", "pydocstyle (>=6.0.0)"]
-test = ["coverage", "hypothesis (>=4.18.0,<5)", "pytest (>=7.0.0)", "pytest-xdist (>=2.4.0)"]
+dev = ["Sphinx (>=1.6.5,<5)", "black (>=22,<23)", "bumpversion (>=0.5.3,<1)", "coverage", "flake8 (==3.7.9)", "hypothesis (>=4.18.0,<5)", "ipython", "isort (>=4.2.15,<5)", "jinja2 (>=3.0.0,<3.1.0)", "mypy (==0.910)", "pydocstyle (>=5.0.0,<6)", "pytest (>=6.2.5,<7)", "pytest-watch (>=4.1.0,<5)", "pytest-xdist", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=21,<22)", "tox (==3.25.0)", "twine", "wheel"]
+doc = ["Sphinx (>=1.6.5,<5)", "jinja2 (>=3.0.0,<3.1.0)", "sphinx-rtd-theme (>=0.1.9,<1)", "towncrier (>=21,<22)"]
+lint = ["black (>=22,<23)", "flake8 (==3.7.9)", "isort (>=4.2.15,<5)", "mypy (==0.910)", "pydocstyle (>=5.0.0,<6)"]
+test = ["coverage", "hypothesis (>=4.18.0,<5)", "pytest (>=6.2.5,<7)", "pytest-xdist", "tox (==3.25.0)"]
 
 [[package]]
 name = "eth-hash"
@@ -2046,17 +2034,6 @@ for-tests = ["coverage", "django-tables2", "django-tastypie", "factory-boy", "py
 with-django = ["Django"]
 
 [[package]]
-name = "pylint-per-file-ignores"
-version = "1.3.0"
-description = "A pylint plugin to ignore error codes per file."
-optional = false
-python-versions = ">=3.8.1,<4.0.0"
-files = [
-    {file = "pylint_per_file_ignores-1.3.0-py3-none-any.whl", hash = "sha256:9711b778dbc58a57b5d8965bb9964a0e84a3d6a922bcd4b6588631d2df7735e7"},
-    {file = "pylint_per_file_ignores-1.3.0.tar.gz", hash = "sha256:45e3222121b24183c43664d20a9bccd0972cf5de0d7f4af386adb0f74f0019d1"},
-]
-
-[[package]]
 name = "pylint-plugin-utils"
 version = "0.8.2"
 description = "Utilities and helpers for writing Pylint plugins"
@@ -2603,6 +2580,22 @@ pure-eval = "*"
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
+name = "swagger-spec-validator"
+version = "3.0.3"
+description = "Validation of Swagger specifications"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "swagger-spec-validator-3.0.3.tar.gz", hash = "sha256:16a5ce08c772824a77b1a4a05efc047d72eef1ed53fb969dfe0a18f437ac30a8"},
+    {file = "swagger_spec_validator-3.0.3-py2.py3-none-any.whl", hash = "sha256:174b5de4ab0899df9a57d35c880aaa515511c4b8b578d9d519b09a9596537055"},
+]
+
+[package.dependencies]
+jsonschema = "*"
+pyyaml = "*"
+typing-extensions = "*"
+
+[[package]]
 name = "termcolor"
 version = "2.3.0"
 description = "ANSI color formatting for output in terminal"
@@ -3063,4 +3056,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "4517ed80b9bb7c47a12d92a1d5d052e017fdefeb93b3a0db924510a6249d96bc"
+content-hash = "d3f09d630b212d860326686dd4af6db15e12d61e8ac925b63f87cb4c7b4138db"
