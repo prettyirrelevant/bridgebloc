@@ -14,6 +14,11 @@ env:
   HUEY_REDIS_URL: ${{ secrets.HUEY_REDIS_URL }}
   DJANGO_SETTINGS_MODULE: ${{ secrets.DJANGO_SETTINGS_MODULE }}
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  CIRCLE_SANDBOX_API_KEY: ${{ secrets.CIRCLE_SANDBOX_API_KEY }}
+  CIRCLE_SANDBOX_BASE_URL: ${{ secrets.CIRCLE_SANDBOX_BASE_URL }}
+  CIRCLE_LIVE_API_KEY: ${{ secrets.CIRCLE_LIVE_API_KEY }}
+  CIRCLE_LIVE_BASE_URL: ${{ secrets.CIRCLE_LIVE_BASE_URL }}
+  CIRCLE_MASTER_WALLET_ID: ${{ secrets.CIRCLE_MASTER_WALLET_ID }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
