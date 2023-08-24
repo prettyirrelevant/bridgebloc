@@ -24,6 +24,8 @@ from django.urls import include, path
 
 from rest_framework.permissions import AllowAny
 
+from bridgebloc.common.openapi import HttpAndHttpsOpenAPISchemaGenerator
+
 docs_schema_view = get_schema_view(
     openapi.Info(
         title='BridgeBloc API',
@@ -31,6 +33,7 @@ docs_schema_view = get_schema_view(
         description='BridgeBloc API',
         license=openapi.License(name='MIT License'),
     ),
+    generator_class=HttpAndHttpsOpenAPISchemaGenerator,
     public=True,
     permission_classes=[AllowAny],
 )
