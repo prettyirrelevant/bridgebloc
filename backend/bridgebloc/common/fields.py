@@ -8,7 +8,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Model
 
-from .types import EVMChainID
+from bridgebloc.evm.types import ChainID
 
 
 class EVMAddressField(models.CharField):
@@ -43,11 +43,11 @@ class EVMAddressField(models.CharField):
 class EVMChainIDField(models.PositiveIntegerField):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs['validators'] = [MinValueValidator(1)]
-        kwargs['choices'] = EVMChainID.choices
+        kwargs['choices'] = [(choice.value, choice.name.replace('_', ' ').title()) for choice in ChainID]
         super().__init__(*args, **kwargs)
 
-    def from_db_value(self, value: Any, *args: Any) -> EVMChainID | None:  # noqa: ARG002
+    def from_db_value(self, value: Any, *args: Any) -> ChainID | None:  # noqa: ARG002
         if value is None:
             return value
 
-        return EVMChainID(value)
+        return ChainID(value)

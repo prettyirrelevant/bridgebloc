@@ -6,7 +6,8 @@ from .models import Token
 
 
 class TokenSerializer(serializers.ModelSerializer):
-    chain = serializers.SerializerMethodField()
+    chain_id = serializers.SerializerMethodField()
+    chain_name = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
 
     def get_image_url(self, obj: Token) -> str:
@@ -15,17 +16,20 @@ class TokenSerializer(serializers.ModelSerializer):
 
         return request.build_absolute_uri(token_img_url)
 
-    def get_chain(self, obj: Token) -> str:
+    def get_chain_name(self, obj: Token) -> str:
         return obj.chain_id.name.lower()
+
+    def get_chain_id(self, obj: Token) -> int:
+        return obj.chain_id.value
 
     class Meta:
         model = Token
         fields = (
             'name',
-            'chain',
             'symbol',
             'address',
             'decimals',
+            'chain_id',
             'image_url',
-            'description',
+            'chain_name',
         )

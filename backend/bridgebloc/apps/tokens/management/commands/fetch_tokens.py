@@ -7,18 +7,18 @@ from django.contrib.staticfiles import finders
 from django.core.management.base import BaseCommand, CommandError
 
 from bridgebloc.apps.tokens.models import Token
-from bridgebloc.common.types import EVMChainID
+from bridgebloc.evm.types import ChainID
 
 
 class Command(BaseCommand):
     help = 'Fetches and stores token information from Coingecko into the database'  # noqa: A003
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
-        supported_coingecko_ids = ['usd-coin', 'dai', 'tether', 'weth', 'matic-network']
+        supported_coingecko_ids = ['usd-coin', 'dai', 'tether', 'weth']
         tokens_to_create = []
         for coingecko_id in supported_coingecko_ids:
             try:
-                token_data = self._fetch_token_data(coingecko_id)
+                token_data = self._fetch_mainnet_token_data(coingecko_id)
                 tokens_to_create.extend(self._extract_tokens(token_data))
             except Exception as e:  # noqa: BLE001
                 raise CommandError(f'Error fetching token information for {coingecko_id}: {e}') from e
@@ -26,7 +26,7 @@ class Command(BaseCommand):
         Token.objects.bulk_create(tokens_to_create)
 
     @staticmethod
-    def _fetch_token_data(coingecko_id: str) -> dict[str, Any]:
+    def _fetch_mainnet_token_data(coingecko_id: str) -> dict[str, Any]:
         """Fetches token data from the Coingecko API."""
         url = f'https://api.coingecko.com/api/v3/coins/{coingecko_id}'
         response = requests.get(url, timeout=10)
@@ -36,8 +36,8 @@ class Command(BaseCommand):
     def _extract_tokens(self, token_data: dict[str, Any]) -> list[Token]:
         """Extracts tokens from token data."""
         tokens = []
-        chains_not_supporting_matic = {EVMChainID.ARBITRUM_ONE, EVMChainID.AVALANCHE, EVMChainID.POLYGON_ZKEVM}
-        for chain_id in EVMChainID:
+        chains_not_supporting_matic = {ChainID.ARBITRUM_ONE, ChainID.AVALANCHE, ChainID.POLYGON_ZKEVM}
+        for chain_id in ChainID:
             if not chain_id.is_mainnet():
                 continue
 
@@ -50,7 +50,6 @@ class Command(BaseCommand):
                     name=token_data['name'],
                     symbol=token_data['symbol'],
                     coingecko_id=token_data['id'],
-                    description=token_data['description']['en'],
                     decimals=token_data['detail_platforms'][chain_id.to_coingecko_id()]['decimal_place'],
                     address=token_data['detail_platforms'][chain_id.to_coingecko_id()]['contract_address'],
                 ),

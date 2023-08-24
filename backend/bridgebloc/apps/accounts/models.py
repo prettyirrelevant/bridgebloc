@@ -5,4 +5,4 @@ from bridgebloc.common.models import TimestampedModel, UUIDModel
 
 
 class Account(UUIDModel, TimestampedModel, models.Model):
-    address = EVMAddressField('address', blank=False)
+    address = EVMAddressField('address', unique=True, blank=False)

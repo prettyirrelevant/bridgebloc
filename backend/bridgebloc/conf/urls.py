@@ -35,10 +35,16 @@ docs_schema_view = get_schema_view(
     permission_classes=[AllowAny],
 )
 
+handler400 = 'bridgebloc.common.views.handler_400'
+handler404 = 'bridgebloc.common.views.handler_404'
+handler500 = 'bridgebloc.common.views.handler_500'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('bridgebloc.apps.core.urls')),
-    path('api/tokens/', include('bridgebloc.apps.tokens.urls')),
+    path('api/', include('bridgebloc.apps.accounts.urls')),
+    path('api/', include('bridgebloc.apps.conversions.urls')),
+    path('api/', include('bridgebloc.apps.tokens.urls')),
     path('api/docs', docs_schema_view.with_ui('swagger', cache_timeout=0), name='api-docs'),
 ]
 
