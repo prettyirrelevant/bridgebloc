@@ -13,17 +13,64 @@ from bridgebloc.evm.types import ChainID
 class Command(BaseCommand):
     help = 'Fetches and stores token information from Coingecko into the database'  # noqa: A003
 
+    SUPPORTED_COINGECKO_IDS = ('usd-coin', 'dai', 'tether', 'weth')
+
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
-        supported_coingecko_ids = ['usd-coin', 'dai', 'tether', 'weth']
         tokens_to_create = []
-        for coingecko_id in supported_coingecko_ids:
+        for coingecko_id in self.SUPPORTED_COINGECKO_IDS:
             try:
                 token_data = self._fetch_mainnet_token_data(coingecko_id)
                 tokens_to_create.extend(self._extract_tokens(token_data))
             except Exception as e:  # noqa: BLE001
                 raise CommandError(f'Error fetching token information for {coingecko_id}: {e}') from e
 
-        Token.objects.bulk_create(tokens_to_create)
+        Token.objects.bulk_create(tokens_to_create, ignore_conflicts=True)
+
+        self._populate_testnet_token_data()
+
+    @staticmethod
+    def _populate_testnet_token_data() -> None:
+        token_addresses = {
+            ChainID.ETHEREUM_TESTNET: [
+                ('0x9D233A907E065855D2A9c7d4B552ea27fB2E5a36', 'dai'),
+                ('0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6', 'weth'),
+                ('0xfad6367E97217cC51b4cd838Cc086831f81d38C2', 'tether'),
+                ('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', 'usd-coin'),
+            ],
+            ChainID.ARBITRUM_ONE_TESTNET: [
+                ('0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844', 'dai'),
+                ('0x7F5bc2250ea57d8ca932898297b1FF9aE1a04999', 'weth'),
+                ('0x147f7266FCD7713B2fB220103325ed765Abd6715', 'tether'),
+                ('0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63', 'usd-coin'),
+            ],
+            ChainID.POLYGON_POS_TESTNET: [
+                ('0x001B3B4d0F3714Ca98ba10F6042DaEbF0B1B7b6F', 'dai'),
+                ('0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa', 'weth'),
+                ('0xA02f6adc7926efeBBd59Fd43A84f4E0c0c91e832', 'tether'),
+                ('0x0FA8781a83E46826621b3BC094Ea2A0212e71B23', 'usd-coin'),
+            ],
+            ChainID.AVALANCHE_TESTNET: [
+                ('0x5425890298aed601595a70AB815c96711a31Bc65', 'usd-coin'),
+            ],
+            ChainID.POLYGON_ZKEVM_TESTNET: [],
+        }
+        testnet_tokens = []
+        for chain_id, tokens in token_addresses.items():
+            for token in tokens:
+                mainnet_token = Token.objects.filter(coingecko_id=token[1]).first()
+                if mainnet_token:
+                    testnet_tokens.append(
+                        Token(
+                            name=mainnet_token.name,
+                            symbol=mainnet_token.symbol,
+                            chain_id=chain_id,
+                            decimals=mainnet_token.decimals,
+                            coingecko_id=mainnet_token.coingecko_id,
+                            address=token[0],
+                        ),
+                    )
+
+        Token.objects.bulk_create(testnet_tokens, ignore_conflicts=True)
 
     @staticmethod
     def _fetch_mainnet_token_data(coingecko_id: str) -> dict[str, Any]:
@@ -36,12 +83,8 @@ class Command(BaseCommand):
     def _extract_tokens(self, token_data: dict[str, Any]) -> list[Token]:
         """Extracts tokens from token data."""
         tokens = []
-        chains_not_supporting_matic = {ChainID.ARBITRUM_ONE, ChainID.AVALANCHE, ChainID.POLYGON_ZKEVM}
         for chain_id in ChainID:
             if not chain_id.is_mainnet():
-                continue
-
-            if chain_id in chains_not_supporting_matic and token_data['id'] == 'matic-network':
                 continue
 
             tokens.append(

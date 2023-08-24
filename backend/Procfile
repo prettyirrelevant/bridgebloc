@@ -1,0 +1,2 @@
+web: sh start.sh
+release: python manage.py migrate && python manage.py collectstatic --noinput && python manage.py fetch_tokens
