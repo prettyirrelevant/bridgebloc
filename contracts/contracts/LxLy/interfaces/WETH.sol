@@ -10,6 +10,14 @@ interface IWETH {
 
     event  Withdrawal(address indexed src, uint wad);
 
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    function balanceOf(address account) external view returns (uint256);
+
     function deposit() external payable;
 
     function withdraw(uint256 wad) external;

@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { Contract } from "ethers";
 import hre, { ethers } from "hardhat";
 import ISwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
+import IWETH from "../artifacts/contracts/LxLy/interfaces/WETH.sol/IWETH.json";
 import IERC20Metadata from "@openzeppelin/contracts/build/contracts/IERC20Metadata.json";
 import ITokenMessenger from "../artifacts/contracts/cctp/interfaces/ITokenMessenger.sol/ITokenMessenger.json";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -11,10 +12,10 @@ describe("CCTP Bridge Tests", function () {
     let cctpBridge: Contract;
     const UNISWAP_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
     const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-    const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+    const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
     const TOKEN_MESSENGER = "0xbd3fa81b58ba92a82136038b25adec7066af3155";
     const MESSAGE_TRANSMITTER = "0x0a992d191deec32afe36203ad87d7d289a738f81";
-    const SUPPORTED_TOKENS = [{token: USDC_ADDRESS, fee: 3000}]
+    const SUPPORTED_TOKENS = [{token: USDC_ADDRESS, fee: 3000}, {token: WETH_ADDRESS, fee: 3000}]
     const CCTP_DOMAIN = 0;
     const zeroAddress = '0x0000000000000000000000000000000000000000';
 
@@ -41,7 +42,7 @@ describe("CCTP Bridge Tests", function () {
         expect(await cctpBridge.bridgeAdmins(deployer.address)).to.equal(true);
 
         for (let token of SUPPORTED_TOKENS) {
-            expect((await cctpBridge.supportedTokens(token.token))[0]).to.equal(token.token);
+            expect((await cctpBridge.supportedTokens(token.token))[0].toLowerCase()).to.equal(token.token.toLowerCase());
             expect((await cctpBridge.supportedTokens(token.token))[1]).to.equal(token.fee);
         };
     });
@@ -73,7 +74,6 @@ describe("CCTP Bridge Tests", function () {
     });
 
     it("Test USDC Deposit", async () => {
-        // Do the neccesary checks
         const [ _, newSigner ] = await ethers.getSigners();
         const block = await hre.ethers.provider.getBlock('latest');
         const blockTimestamp = block ? block.timestamp : 0;
@@ -113,9 +113,42 @@ describe("CCTP Bridge Tests", function () {
         const bridgeAddress = await cctpBridge.getAddress();
         const destinationContractBytes32 = await cctpBridge.addressToBytes32(destinationContract);
         expect(parseInt(finalBalance)).to.equal(parseInt(initialBalance) - 100);
-        await expect(depositTxn).to.emit(cctpBridge, 'BridgeDepositReceived').withArgs(CCTP_DOMAIN.toString(), destinationDomain.toString(), anyValue, depositAmount, USDC_ADDRESS, newSigner.address, recipient, destinationToken);
+        await expect(depositTxn).to.emit(cctpBridge, 'BridgeDepositReceived').withArgs(newSigner.address, recipient, CCTP_DOMAIN.toString(), destinationDomain.toString(), anyValue, depositAmount, USDC_ADDRESS, destinationToken);
         await expect(depositTxn).to.emit(usdcContract, 'Transfer').withArgs(newSigner.address, bridgeAddress, depositAmount);
         await expect(depositTxn).to.emit(usdcContract, 'Approval').withArgs(bridgeAddress, caseInsensitiveTokenMessenger, depositAmount);
         await expect(depositTxn).to.emit(tokenMessengerContract, 'DepositForBurn').withArgs(anyValue, USDC_ADDRESS, depositAmount, bridgeAddress, destinationContractBytes32, destinationDomain, anyValue, isZeroAddress);        
+    })
+
+    it("Test WETH Deposit", async () => {
+        const [ _, newSigner ] = await ethers.getSigners();
+        const wethContract = new ethers.Contract(WETH_ADDRESS, IWETH.abi, newSigner);
+        const usdcContract = new ethers.Contract(USDC_ADDRESS, IERC20Metadata.abi, newSigner);
+        const tokenMessengerContract = new ethers.Contract(TOKEN_MESSENGER, ITokenMessenger.abi, newSigner);
+
+        // Step1: Deposit ETH for WETH 
+        const wrapAmount = "1";
+        await wethContract.deposit({value: ethers.parseEther(wrapAmount)});
+
+        // Step2: Call the deposit method of cctpbridge to deposit weth
+        const depositAmount = ethers.parseUnits("1", 18);
+        const sourceToken = WETH_ADDRESS;
+        const destinationToken = USDC_ADDRESS;
+        const destinationDomain = 1;
+        const recipient = newSigner.address;
+        const destinationContract = await cctpBridge.getAddress();
+        const initialBalance = ethers.formatUnits(await wethContract.balanceOf(newSigner.address), 18);
+        await wethContract.approve(destinationContract, depositAmount); // Approve CCTPBridge[same as destination contract] to spend depositAmount.
+        const depositTxn = await cctpBridge.connect(newSigner).deposit(depositAmount, sourceToken, destinationToken, destinationDomain, recipient, destinationContract);
+        const finalBalance = ethers.formatUnits(await wethContract.balanceOf(newSigner.address), 18);
+        
+        // Step3: Assertions
+        const bridgeAddress = await cctpBridge.getAddress();
+        const destinationContractBytes32 = await cctpBridge.addressToBytes32(destinationContract);
+        expect(parseInt(finalBalance)).to.equal(parseInt(initialBalance) - 1);
+        await expect(depositTxn).to.emit(cctpBridge, 'BridgeDepositReceived').withArgs(newSigner.address, recipient, CCTP_DOMAIN.toString(), destinationDomain.toString(), anyValue, anyValue, WETH_ADDRESS, destinationToken);
+        await expect(depositTxn).to.emit(wethContract, 'Transfer').withArgs(newSigner.address, bridgeAddress, depositAmount);
+        await expect(depositTxn).to.emit(usdcContract, 'Approval').withArgs(bridgeAddress, caseInsensitiveTokenMessenger, anyValue);
+        await expect(depositTxn).to.emit(tokenMessengerContract, 'DepositForBurn').withArgs(anyValue, USDC_ADDRESS, anyValue, bridgeAddress, destinationContractBytes32, destinationDomain, anyValue, isZeroAddress);
+
     })
 })

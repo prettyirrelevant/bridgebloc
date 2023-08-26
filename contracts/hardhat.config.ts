@@ -10,13 +10,13 @@ const PRIVATE_KEY = String(process.env.PRIVATE_KEY);
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.17",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 100
-      },
-      viaIR: true
-    }
+    // settings: {
+    //   optimizer: {
+    //     enabled: true,
+    //     runs: 100
+    //   },
+    //   viaIR: true
+    // }
   },
   networks: {
     hardhat: {
