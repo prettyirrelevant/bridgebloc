@@ -275,6 +275,21 @@ CIRCLE_LIVE_BASE_URL = env.str('CIRCLE_LIVE_BASE_URL')
 
 
 # ==============================================================================
+# CCTP & LXLY SETTINGS
+# ==============================================================================
+ETHEREUM_RPC_NODES = env.list('ETHEREUM_RPC_NODES')
+POLYGON_POS_RPC_NODES = env.list('POLYGON_POS_RPC_NODES')
+ARBITRUM_ONE_RPC_NODES = env.list('ARBITRUM_ONE_RPC_NODES')
+POLYGON_ZKEVM_RPC_NODES = env.list('POLYGON_ZKEVM_RPC_NODES')
+ETHEREUM_TESTNET_RPC_NODES = env.list('ETHEREUM_TESTNET_RPC_NODES')
+POLYGON_POS_TESTNET_RPC_NODES = env.list('POLYGON_POS_TESTNET_RPC_NODES')
+ARBITRUM_ONE_TESTNET_RPC_NODES = env.list('ARBITRUM_ONE_TESTNET_RPC_NODES')
+POLYGON_ZKEVM_TESTNET_RPC_NODES = env.list('POLYGON_ZKEVM_TESTNET_RPC_NODES')
+AVALANCHE_TESTNET_RPC_NODES = env.list('AVALANCHE_TESTNET_RPC_NODES')
+AVALANCHE_RPC_NODES = env.list('AVALANCHE_RPC_NODES')
+
+
+# ==============================================================================
 # LOGGING SETTINGS
 # ==============================================================================
 if not DEBUG:

@@ -111,4 +111,6 @@ class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
     serializer_class = CCTPTokenConversionInitialisationSerializer
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         return success_response(data=None)

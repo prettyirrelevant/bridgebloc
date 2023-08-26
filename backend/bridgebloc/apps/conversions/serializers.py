@@ -1,12 +1,16 @@
 from typing import Any
 
 from eth_utils.address import is_address, to_checksum_address
+from web3.logs import DISCARD
+from web3.types import TxReceipt
 
 from rest_framework import serializers
 
 from bridgebloc.apps.accounts.serializers import AccountSerializer
 from bridgebloc.apps.tokens.models import Token
 from bridgebloc.apps.tokens.serializers import TokenSerializer
+from bridgebloc.evm.aggregator import EVMAggregator
+from bridgebloc.evm.client import EVMClient
 from bridgebloc.evm.types import ChainID
 
 from .models import TokenConversion, TokenConversionStep
@@ -53,8 +57,12 @@ class CircleAPITokenConversionInitialisationSerializer(serializers.Serializer):
     amount = serializers.DecimalField(required=True, max_digits=16, decimal_places=2, min_value=1)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        source_chain = ChainID.from_name(attrs['source_chain'])
-        destination_chain = ChainID.from_name(attrs['destination_chain'])
+        try:
+            source_chain = ChainID.from_name(attrs['source_chain'])
+            destination_chain = ChainID.from_name(attrs['destination_chain'])
+        except ValueError as e:
+            raise serializers.ValidationError(str(e)) from e
+
         if source_chain == destination_chain:
             raise serializers.ValidationError('source_chain cannot be the same as destination_chain')
 
@@ -96,14 +104,65 @@ class CircleAPITokenConversionInitialisationSerializer(serializers.Serializer):
 
 class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
     tx_hash = serializers.CharField(required=True)
-    cctp_source_domain = serializers.CharField(required=True)
+    chain = serializers.CharField(required=True)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        try:
+            chain = ChainID.from_name(attrs['chain'])
+        except ValueError as e:
+            raise serializers.ValidationError(str(e)) from e
+
+        evm_client = EVMAggregator().get_client(chain)
+        receipt = evm_client.get_transaction_receipt(attrs['tx_hash'])
+
+        details = self._validate_transaction(evm_client, receipt)
+        return attrs
+
+    def _validate_transaction(self, client: EVMClient, receipt: TxReceipt, chain: ChainID) -> dict[str, Any]:
+        cross_chain_bridge_contract = client.get_contract(
+            name='CrossChainBridge',
+            address='0x0a992d191DEeC32aFe36203Ad87D7d289a738F81',
+        )
+        token_messenger_contract = client.get_contract(
+            name='TokenMessenger',
+            address='0x0a992d191DEeC32aFe36203Ad87D7d289a738F81',
+        )
+
+        found_bridge_events = cross_chain_bridge_contract.events.BridgeDepositReceived().process_receipt(
+            receipt, errors=DISCARD
+        )
+        if len(found_bridge_events) == 0 or len(found_bridge_events) > 1:
+            raise serializers.ValidationError(
+                f'Expected just one `BridgeDepositReceived` event, got {len(found_bridge_events)}'
+            )
+
+        bridge_event = found_bridge_events[0].args
+        # check `from`
+        # check `source chain`
+        # check `source token`
+        # check `destination chain`
+        # check `destination token`
+        if self.context['request'].user.address == to_checksum_address(bridge_event['from']):
+            raise serializers.ValidationError(f'{bridge_event["from"]} does not match the authenticated user')
+
+        try:
+            source_token = Token.objects.get(address=to_checksum_address(bridge_event['sourceToken']), chain=chain)
+            destination_token = Token.objects.get(address=to_checksum_address(bridge_event['destinationToken']), chain=chain)
+        except Token.DoesNotExist:
+            raise serializers.ValidationError('Token is not supported currently')
+
+        found_message_sent_events = token_messenger_contract.events.MessageSent().process_receipt(
+            receipt, errors=DISCARD
+        )
+        if len(found_message_sent_events) == 0 or len(found_message_sent_events) > 1:
+            raise serializers.ValidationError(
+                f'Expected just one `MessageSent` event, got {len(found_message_sent_events)}'
+            )
+
+        message_sent_event = found_message_sent_events[0].args
+        return {}
 
 
 class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
-    source_chain = serializers.CharField(required=True)
-    source_token = serializers.CharField(required=True)
-    source_address = serializers.CharField(required=True)
-    destination_chain = serializers.CharField(required=True)
-    destination_token = serializers.CharField(required=True)
-    destination_address = serializers.CharField(required=True)
-    amount = serializers.DecimalField(required=True, max_digits=16, decimal_places=2)
+    tx_hash = serializers.CharField(required=True)
+    chain = serializers.CharField(required=True)
