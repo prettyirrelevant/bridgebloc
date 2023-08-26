@@ -195,6 +195,7 @@ jobs:
 
       - name: Setup Nodejs
         uses: actions/setup-node@v3
+        working-directory: ./contracts
         with:
           node-version: "16.0.0"
           cache: 'yarn'
