@@ -113,7 +113,7 @@ describe("CCTP Bridge Tests", function () {
         const bridgeAddress = await cctpBridge.getAddress();
         const destinationContractBytes32 = await cctpBridge.addressToBytes32(destinationContract);
         expect(parseInt(finalBalance)).to.equal(parseInt(initialBalance) - 100);
-        await expect(depositTxn).to.emit(cctpBridge, 'BridgeDepositReceived').withArgs(CCTP_DOMAIN.toString(), destinationDomain.toString(), anyValue, depositAmount, newSigner.address, recipient, destinationToken);
+        await expect(depositTxn).to.emit(cctpBridge, 'BridgeDepositReceived').withArgs(CCTP_DOMAIN.toString(), destinationDomain.toString(), anyValue, depositAmount, USDC_ADDRESS, newSigner.address, recipient, destinationToken);
         await expect(depositTxn).to.emit(usdcContract, 'Transfer').withArgs(newSigner.address, bridgeAddress, depositAmount);
         await expect(depositTxn).to.emit(usdcContract, 'Approval').withArgs(bridgeAddress, caseInsensitiveTokenMessenger, depositAmount);
         await expect(depositTxn).to.emit(tokenMessengerContract, 'DepositForBurn').withArgs(anyValue, USDC_ADDRESS, depositAmount, bridgeAddress, destinationContractBytes32, destinationDomain, anyValue, isZeroAddress);        
