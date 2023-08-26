@@ -9,7 +9,7 @@ import { Contract, parseEther, parseUnits } from "ethers";
 
 import bridge from "../artifacts/contracts/LxLy/polygonZKEVMContracts/PolygonZkEVMBridge.sol/PolygonZkEVMBridge.json";
 
-describe("Bridge", function () {
+describe("LXLY Bridge Tests", function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.

@@ -26,14 +26,14 @@ contract CrossChainBridge is BridgeUtil {
     mapping(address => bool) public bridgeAdmins;
 
     event BridgeDepositReceived(
+        address indexed from,
+        address indexed recipient,
         uint32 sourceChain,
         uint32 destinationChain,
         uint64 nonce,
         uint256 amount,
         address sourceToken,
-        address indexed from,
-        address indexed recipient,
-        address indexed destinationToken
+        address destinationToken
     );
     event BridgeWithdrawalMade(
         address indexed recipient,
@@ -110,18 +110,12 @@ contract CrossChainBridge is BridgeUtil {
         address recipient,
         address destinationContract
     ) public returns (uint64) {
-        SupportedToken storage supportedSourceToken = supportedTokens[
-            sourceToken
-        ];
-        SupportedToken storage supportedDestToken = supportedTokens[
-            destinationToken
-        ];
         require(
-            supportedSourceToken.token != address(0),
+            supportedTokens[sourceToken].token != address(0),
             "Source Token not supported"
         );
         require(
-            supportedDestToken.token != address(0),
+            supportedTokens[destinationToken].token != address(0),
             "Destination Token not supported"
         );
         // Transfer the token from the caller to the bridge contract
@@ -133,11 +127,11 @@ contract CrossChainBridge is BridgeUtil {
         );
         uint256 amountOut = amount;
 
-        address usdcAddress = address(usdcToken);
-        if (sourceToken != usdcAddress) {
+        // address usdcAddress = address(usdcToken);
+        if (sourceToken != address(usdcToken)) {
             amountOut = performSwap(
                 sourceToken,
-                usdcAddress,
+                address(usdcToken),
                 address(this),
                 amount
             );
@@ -157,13 +151,13 @@ contract CrossChainBridge is BridgeUtil {
             address(usdcToken)
         );
         emit BridgeDepositReceived(
+            msg.sender,
+            recipient,
             CCTP_DOMAIN,
             destinationDomain,
             nonce,
             amountOut,
             sourceToken,
-            msg.sender,
-            recipient,
             destinationToken
         );
         return nonce;
