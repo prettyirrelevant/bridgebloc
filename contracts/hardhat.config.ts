@@ -8,7 +8,16 @@ const INFURA_ETH_KEY = process.env.INFURA_ETH_KEY;
 
 const PRIVATE_KEY = String(process.env.PRIVATE_KEY);
 const config: HardhatUserConfig = {
-  solidity: "0.8.17",
+  solidity: {
+    version: "0.8.17",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 100
+      },
+      viaIR: true
+    }
+  },
   networks: {
     hardhat: {
       forking: {

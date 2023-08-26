@@ -30,9 +30,9 @@ contract CrossChainBridge is BridgeUtil {
         uint32 destinationChain,
         uint64 nonce,
         uint256 amount,
+        address sourceToken,
         address indexed from,
         address indexed recipient,
-        address sourceToken,
         address indexed destinationToken
     );
     event BridgeWithdrawalMade(
@@ -161,9 +161,9 @@ contract CrossChainBridge is BridgeUtil {
             destinationDomain,
             nonce,
             amountOut,
+            sourceToken,
             msg.sender,
             recipient,
-            sourceToken,
             destinationToken
         );
         return nonce;
