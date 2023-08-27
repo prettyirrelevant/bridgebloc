@@ -204,5 +204,5 @@ jobs:
       
       - name: Run tests
         working-directory: ./contracts
-        run: yarn hardhat test
+        run: yarn hardhat --config hardhat-eth-fork.config.ts test
 
