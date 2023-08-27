@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "bridgebloc-backend"
 version = "0.0.1"
-description = ""
+description = "Using Circle's services to create a bridge"
 authors = [
   "Isaac Adewumi <ienioladewumi@gmail.com>",
   "Tobiloba Emmanuel",
