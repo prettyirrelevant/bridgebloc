@@ -246,5 +246,6 @@ def cctp_send_token_to_recipient() -> None:
             ),
         )
         tx_hash = evm_client.publish_transaction(tx_params=unsigned_tx, sender=deployer)
+        step.status = TokenConversionStepStatus.SUCCESSFUL
         step.metadata['tx_hash'] = tx_hash.hex()
         step.save()
