@@ -4,8 +4,6 @@ from eth_account.messages import SignableMessage, encode_defunct
 from eth_utils.address import is_checksum_address
 from web3.auto import w3
 
-from django.core.cache import cache
-
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -21,15 +19,11 @@ class Web3Authentication(TokenAuthentication):
             raise AuthenticationFailed(detail='Invalid address provided in signature. Make sure it is checksum')
 
         try:
-            account = Account.objects.get(address=address)
+            account = Account.objects.get_or_create(address=address, defaults={'address': address})
         except Account.DoesNotExist as e:
             raise AuthenticationFailed(detail=f'Account with address {address} does not exist') from e
 
-        nonce = cache.get(address, default=None)
-        if nonce is None:
-            raise AuthenticationFailed(detail='Nonce has been used or expired')
-
-        msg = self.recreate_signed_message(nonce)
+        msg = self.recreate_signed_message()
         retrieved_address = w3.eth.account.recover_message(
             signable_message=msg,
             signature=signature.encode(),
@@ -37,10 +31,9 @@ class Web3Authentication(TokenAuthentication):
         if address != retrieved_address:
             raise AuthenticationFailed('Signature provided is not valid for the address')
 
-        cache.delete(address)
         return account, None
 
     @staticmethod
-    def recreate_signed_message(nonce: str) -> SignableMessage:
-        msg = f'Message: Welcome to BridgeBloc!\nNonce: {nonce}\nURI: https://bridgebloc.vercel.app'
+    def recreate_signed_message() -> SignableMessage:
+        msg = 'Message: Welcome to BridgeBloc!\nURI: https://bridgebloc.vercel.app'
         return encode_defunct(text=msg)
