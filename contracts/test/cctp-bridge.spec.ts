@@ -6,17 +6,18 @@ import IWETH from "../artifacts/contracts/LxLy/interfaces/WETH.sol/IWETH.json";
 import IERC20Metadata from "@openzeppelin/contracts/build/contracts/IERC20Metadata.json";
 import ITokenMessenger from "../artifacts/contracts/cctp/interfaces/ITokenMessenger.sol/ITokenMessenger.json";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { cctpDomains, deploymentVariables } from "../config/cctp";
 
 
-describe("CCTP Bridge Tests", function () {
+describe("CCTP Bridge Mainnet Fork Tests", function () {
     let cctpBridge: Contract;
-    const UNISWAP_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
-    const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+    const UNISWAP_ROUTER = deploymentVariables.mainnet.eth.uniswapRouter;
+    const USDC_ADDRESS = deploymentVariables.mainnet.eth.usdcToken;
     const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-    const TOKEN_MESSENGER = "0xbd3fa81b58ba92a82136038b25adec7066af3155";
-    const MESSAGE_TRANSMITTER = "0x0a992d191deec32afe36203ad87d7d289a738f81";
-    const SUPPORTED_TOKENS = [{token: USDC_ADDRESS, fee: 3000}, {token: WETH_ADDRESS, fee: 3000}]
-    const CCTP_DOMAIN = 0;
+    const TOKEN_MESSENGER = deploymentVariables.mainnet.eth.tokenMessenger;
+    const MESSAGE_TRANSMITTER = deploymentVariables.mainnet.eth.messageTransmitter;
+    const SUPPORTED_TOKENS = deploymentVariables.mainnet.eth.supportedTokens;
+    const CCTP_DOMAIN = cctpDomains.ethereum;
     const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     const caseInsensitiveTokenMessenger = (value: string): boolean => {
