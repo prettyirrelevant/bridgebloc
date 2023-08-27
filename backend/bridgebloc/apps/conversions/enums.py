@@ -14,4 +14,5 @@ class CircleAPIConversionStepType(models.TextChoices):
 
 
 class CCTPConversionStepType(models.TextChoices):
-    ...
+    ATTESTATION_SERVICE_CONFIRMATION = 'attestation service confirmation'
+    SEND_TO_RECIPIENT = 'send to recipient'

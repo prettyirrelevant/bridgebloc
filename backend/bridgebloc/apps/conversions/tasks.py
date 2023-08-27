@@ -1,40 +1,21 @@
 import logging
 from datetime import datetime
-from uuid import UUID
 
+from eth_account import Account
 from huey import crontab
-from huey.contrib.djhuey import db_periodic_task, db_task, lock_task
+from huey.contrib.djhuey import db_periodic_task, lock_task
+from web3.types import TxParams
 
 from django.conf import settings
 from django.utils import timezone
 
-from .enums import CircleAPIConversionStepType, TokenConversionStepStatus
-from .models import TokenConversion, TokenConversionStep
-from .utils import get_circle_api_client
+from bridgebloc.evm.aggregator import EVMAggregator
 
-logger = logging.getLogger('huey')
+from .enums import CCTPConversionStepType, CircleAPIConversionStepType, TokenConversionStepStatus
+from .models import TokenConversionStep
+from .utils import get_attestation_client, get_circle_api_client, get_cross_chain_bridge_deployment_address
 
-
-@db_task()
-def initiate_circle_api_payment_intent(token_conversion_id: UUID) -> None:
-    logger.info(f'Initiating Circle API payment intent for Token Conversion: {token_conversion_id}')
-
-    try:
-        token_conversion = TokenConversion.objects.get(uuid=token_conversion_id)
-        circle_client = get_circle_api_client(token_conversion.source_chain)
-        result = circle_client.create_payment_intent(
-            amount=token_conversion.amount,
-            chain=token_conversion.source_chain.to_circle(),
-        )
-        TokenConversionStep.objects.create(
-            metadata=result['data'],
-            conversion=token_conversion,
-            status=TokenConversionStepStatus.PENDING,
-            step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
-        )
-        logger.info(f'Initiated Circle API payment intent for Token Conversion: {token_conversion_id}')
-    except Exception as e:
-        logger.exception('Error occurred while initiating Circle API payment intent', exc_info=e)
+logger = logging.getLogger(__name__)
 
 
 @db_periodic_task(crontab(minute=1))
@@ -43,7 +24,7 @@ def poll_circle_for_deposit_addresses() -> None:
     logger.info('Starting Circle API deposit addresses polling...')
 
     try:
-        steps_needing_deposit_addresses = TokenConversionStep.objects.filter(
+        steps_needing_deposit_addresses = TokenConversionStep.objects.select_related('conversion').filter(
             status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
         )
@@ -81,7 +62,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
     logger.info('Starting Circle API deposit confirmation checks...')
 
     try:
-        steps_needing_deposit_addresses = TokenConversionStep.objects.filter(
+        steps_needing_deposit_addresses = TokenConversionStep.objects.select_related('conversion').filter(
             status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT,
         )
@@ -129,11 +110,12 @@ def check_for_circle_api_deposit_confirmation() -> None:
 
 
 @db_periodic_task(crontab(minute=1))
+@lock_task('send-to-recipient-using-circle-api-lock')
 def send_to_recipient_using_circle_api() -> None:
     logger.info('Starting Circle API withdrawal process for recipients...')
 
     try:
-        steps_needing_withdrawal = TokenConversionStep.objects.filter(
+        steps_needing_withdrawal = TokenConversionStep.objects.select_related('conversion').filter(
             metadata__id__isnull=True,
             status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
@@ -143,7 +125,7 @@ def send_to_recipient_using_circle_api() -> None:
         for step in steps_needing_withdrawal:
             logger.info(f'Processing step {step.uuid} for withdrawal to recipient...')
 
-            circle_client = get_circle_api_client(step.conversion.source_chain)
+            circle_client = get_circle_api_client(step.conversion.destination_chain)
             response = circle_client.make_withdrawal(
                 amount=step.conversion.amount,
                 master_wallet_id=settings.CIRCLE_MASTER_WALLET_ID,
@@ -160,12 +142,13 @@ def send_to_recipient_using_circle_api() -> None:
         logger.exception('Error occurred while checking for Circle API deposit confirmation', exc_info=e)
 
 
-@db_periodic_task(crontab(minute=1))
+@db_periodic_task(crontab(minute=3))
+@lock_task('wait-for-minimum-confirmation-for-circle-api-withdrawals')
 def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
     logger.info('Starting withdrawal confirmation check for Circle API withdrawals...')
 
     try:
-        steps_needing_withdrawal = TokenConversionStep.objects.filter(
+        steps_needing_withdrawal = TokenConversionStep.objects.select_related('conversion').filter(
             metadata__id__isnull=False,
             status=TokenConversionStepStatus.PENDING,
             step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
@@ -174,7 +157,8 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
 
         for step in steps_needing_withdrawal:
             logger.info(f'Checking withdrawal confirmation for step {step.uuid}...')
-            circle_client = get_circle_api_client(step.conversion.source_chain)
+
+            circle_client = get_circle_api_client(step.conversion.destination_chain)
             response = circle_client.get_withdrawal_info(step.metadata['id'])
             if response['data']['status'] == 'running' and response['data']['transactionHash'] is not None:
                 step.metadata = response['data']
@@ -193,3 +177,74 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
         logger.info('Withdrawals confirmation check completed.')
     except Exception as e:
         logger.exception('Error occurred while checking for Circle API deposit confirmation', exc_info=e)
+
+
+@db_periodic_task(crontab(minute=2))
+@lock_task('check-for-cctp-attestation-confirmation')
+def check_for_cctp_attestation_confirmation() -> None:
+    steps_waiting_for_attestation_confirmation = TokenConversionStep.objects.select_related('conversion').filter(
+        status=TokenConversionStepStatus.PENDING,
+        step_type=CCTPConversionStepType.ATTESTATION_SERVICE_CONFIRMATION,
+    )
+    for step in steps_waiting_for_attestation_confirmation:
+        attestation_client = get_attestation_client(step.conversion.source_chain)
+        result = attestation_client.get_attestation(step.metadata['message_hash'])
+        if result['data']['status'] != 'complete':
+            logger.info(
+                f'Attestation not found or still pending for hash: {step.metadata["message_hash"]}. Skipping...',
+            )
+            continue
+
+        step.status = TokenConversionStepStatus.SUCCESSFUL
+        step.save()
+
+        TokenConversionStep.objects.create(
+            metadata={
+                'nonce': step.metadata['nonce'],
+                'attestation': result['data']['attestation'],
+                'message_hash': step.metadata['message_hash'],
+            },
+            conversion=step.conversion,
+            status=TokenConversionStepStatus.PENDING,
+            step_type=CCTPConversionStepType.SEND_TO_RECIPIENT,
+        )
+
+
+@db_periodic_task(crontab(minute=5))
+@lock_task('cctp-send-token-to-recipient')
+def cctp_send_token_to_recipient() -> None:
+    recipient_credit_steps = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
+        metadata__tx_hash__isnull=True,
+        status=TokenConversionStepStatus.PENDING,
+        step_type=CCTPConversionStepType.SEND_TO_RECIPIENT,
+    )
+    for step in recipient_credit_steps:
+        evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
+        contract = evm_client.get_contract(
+            name='CrossChainBridge',
+            address=get_cross_chain_bridge_deployment_address(step.conversion.destination_chain),
+        )
+        deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
+        send_to_recipient_fn__call = contract.functions.sendToRecipient(
+            step.metadata['message_hash'],
+            step.metadata['attestation'],
+            step.metadata['nonce'],
+            step.conversion.destination_token.convert_from_token_to_wei(step.conversion.amount),
+            step.conversion.destination_token.address,
+            step.conversion.destination_address,
+        )
+        unsigned_tx = send_to_recipient_fn__call.build_transaction(
+            TxParams(
+                {
+                    'type': 2,
+                    'maxFeePerGas': '',
+                    'maxPriorityFeePerGas': '',
+                    'gas': 0,
+                    'from': deployer.address,
+                    'chainId': step.conversion.destination_chain.value,
+                },
+            ),
+        )
+        tx_hash = evm_client.publish_transaction(tx_params=unsigned_tx, sender=deployer)
+        step.metadata['tx_hash'] = tx_hash.hex()
+        step.save()

@@ -7,15 +7,17 @@ from pathlib import Path
 from typing import Any, Literal
 from urllib.parse import urlparse
 
-from eth_typing import BlockNumber, ChecksumAddress
+from eth_account.signers.local import LocalAccount
+from eth_typing import BlockNumber, ChecksumAddress, HexStr
+from hexbytes import HexBytes
 from requests import RequestException
 from web3 import HTTPProvider, Web3
 from web3._utils.filters import construct_event_filter_params
-from web3.contract import Contract
+from web3.contract.contract import Contract
 from web3.exceptions import TransactionNotFound, Web3Exception
 from web3.middleware.cache import construct_simple_cache_middleware
 from web3.middleware.geth_poa import geth_poa_middleware
-from web3.types import ABIEvent, LogReceipt, TxData, TxReceipt
+from web3.types import ABIEvent, LogReceipt, TxData, TxParams, TxReceipt, Wei
 from web3.utils.caching import SimpleCache
 
 from bridgebloc.evm.constants import DEFAULT_RPC_TIMEOUT
@@ -44,8 +46,7 @@ def query_all_nodes() -> Callable:
 
                 return response
 
-            # TODO: use a different error.
-            raise ValueError(
+            raise RuntimeError(
                 f'Unable to query {fn.__name__!r} with kwargs: {kwargs} after attempting {self.connected_nodes}',
             )
 
@@ -70,12 +71,29 @@ class EVMClient:
         return w3.eth.block_number
 
     @query_all_nodes()
-    def get_transaction_receipt(self, w3: Web3, tx_hash: str) -> TxReceipt:
+    def get_transaction_receipt(self, w3: Web3, tx_hash: HexStr) -> TxReceipt:
         return w3.eth.get_transaction_receipt(tx_hash)
 
     @query_all_nodes()
-    def get_transaction(self, w3: Web3, tx_hash: str) -> TxData:
+    def get_transaction(self, w3: Web3, tx_hash: HexStr) -> TxData:
         return w3.eth.get_transaction(tx_hash)
+
+    @query_all_nodes()
+    def publish_transaction(
+        self,
+        w3: Web3,
+        tx_params: TxParams,
+        sender: LocalAccount,
+    ) -> HexBytes:
+        max_priority_fee, max_fee = self._get_gas_params(w3)
+        tx_params['chainId'] = self.chain
+        tx_params['maxFeePerGas'] = max_fee
+        tx_params['maxPriorityFeePerGas'] = max_priority_fee
+        tx_params['nonce'] = w3.eth.get_transaction_count(sender.address)
+        tx_params['gas'] = w3.eth.estimate_gas(tx_params)
+
+        signed_txn = w3.eth.account.sign_transaction(tx_params, sender.key)
+        return w3.eth.send_raw_transaction(signed_txn.rawTransaction)
 
     def get_contract(self, name: Literal['CrossChainBridge', 'TokenMessenger'], address: ChecksumAddress) -> Contract:
         if name in {'CrossChainBridge', 'TokenMessenger'} and not self.chain.is_valid_cctp_chain():
@@ -142,3 +160,10 @@ class EVMClient:
         parsed_url = urlparse(endpoint)
         if parsed_url.scheme != 'https' or not parsed_url.netloc:
             raise ValueError('Provided URL is not secured or invalid')
+
+    @staticmethod
+    def _get_gas_params(w3: Web3) -> tuple[Wei, Wei]:
+        base_fee = w3.eth.get_block('pending')['baseFeePerGas']
+        max_priority_fee_per_gas = w3.eth.max_priority_fee
+        max_fee_per_gas = Wei(base_fee + max_priority_fee_per_gas)
+        return max_priority_fee_per_gas, max_fee_per_gas

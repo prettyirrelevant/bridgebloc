@@ -15,7 +15,7 @@ from bridgebloc.common.helpers import success_response
 from bridgebloc.common.types import AuthenticatedRequest
 
 from .constants import VALID_CONVERSION_ROUTES
-from .enums import TokenConversionStepStatus, CircleAPIConversionStepType
+from .enums import CCTPConversionStepType, CircleAPIConversionStepType, TokenConversionStepStatus
 from .models import TokenConversion, TokenConversionStep
 from .permissions import IsOwner
 from .serializers import (
@@ -24,7 +24,6 @@ from .serializers import (
     LxLyTokenConversionInitialisationSerializer,
     TokenConversionSerializer,
 )
-from .tasks import initiate_circle_api_payment_intent
 from .types import ConversionMethod
 from .utils import get_circle_api_client
 
@@ -71,17 +70,16 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
     def post(self, request: AuthenticatedRequest, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         with transaction.atomic():
             conversion = TokenConversion.objects.create(
                 creator=request.user,
-                amount=serializer.validated_data['amount'],
+                amount=serializer.data['amount'],
                 conversion_type=ConversionMethod.CIRCLE_API,
-                source_chain=serializer.validated_data['source_chain'],
-                source_token=serializer.validated_data['source_token'],
-                destination_address=serializer.validated_data['destination_address'],
-                destination_chain=serializer.validated_data['destination_chain'],
-                destination_token=serializer.validated_data['destination_token'],
+                source_chain=serializer.data['source_chain'],
+                source_token=serializer.data['source_token'],
+                destination_address=serializer.data['destination_address'],
+                destination_chain=serializer.data['destination_chain'],
+                destination_token=serializer.data['destination_token'],
             )
             circle_client = get_circle_api_client(conversion.source_chain)
             result = circle_client.create_payment_intent(
@@ -94,7 +92,6 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
                 status=TokenConversionStepStatus.PENDING,
                 step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
             )
-
         return success_response(data={'id': conversion.uuid}, status_code=status.HTTP_201_CREATED)
 
 
@@ -110,7 +107,30 @@ class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = CCTPTokenConversionInitialisationSerializer
 
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+    def post(self, request: AuthenticatedRequest, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        return success_response(data=None)
+
+        with transaction.atomic():
+            conversion = TokenConversion.objects.create(
+                creator=request.user,
+                amount=serializer.data['amount'],
+                conversion_type=ConversionMethod.CCTP,
+                source_chain=serializer.data['source_chain'],
+                source_token=serializer.data['source_token'],
+                destination_address=serializer.data['destination_address'],
+                destination_chain=serializer.data['destination_chain'],
+                destination_token=serializer.data['destination_token'],
+            )
+            TokenConversionStep.objects.create(
+                conversion=conversion,
+                step_type=CCTPConversionStepType.ATTESTATION_SERVICE_CONFIRMATION,
+                metadata={
+                    'nonce': serializer.data['nonce'],
+                    'source_tx_hash': serializer.data['tx_hash'],
+                    'message_hash': serializer.data['message_hash'],
+                },
+                status=TokenConversionStepStatus.PENDING,
+            )
+
+        return success_response(data={'id': conversion.uuid})

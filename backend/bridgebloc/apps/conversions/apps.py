@@ -9,7 +9,7 @@ class ConversionsConfig(AppConfig):
     name = 'bridgebloc.apps.conversions'
 
     def ready(self) -> None:
-        EVMAggregator(
+        EVMAggregator.initialize(
             config=EVMAggregatorConfig(
                 ethereum_endpoints=settings.ETHEREUM_RPC_NODES,
                 avalanche_endpoints=settings.AVALANCHE_RPC_NODES,

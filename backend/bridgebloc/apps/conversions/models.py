@@ -3,7 +3,7 @@ from django.db import models
 from bridgebloc.common.fields import EVMAddressField, EVMChainIDField
 from bridgebloc.common.models import TimestampedModel, UUIDModel
 
-from .enums import CircleAPIConversionStepType, TokenConversionStepStatus
+from .enums import CCTPConversionStepType, CircleAPIConversionStepType, TokenConversionStepStatus
 from .types import ConversionMethod
 
 
@@ -49,6 +49,11 @@ class TokenConversionStep(UUIDModel, TimestampedModel, models.Model):
         on_delete=models.CASCADE,
         blank=False,
     )
-    step_type = models.CharField('step type', max_length=150, choices=CircleAPIConversionStepType.choices, blank=False)
+    step_type = models.CharField(
+        'step type',
+        max_length=150,
+        choices=CircleAPIConversionStepType.choices + CCTPConversionStepType.choices,
+        blank=False,
+    )
     metadata = models.JSONField('metadata', blank=False)
     status = models.CharField('status', max_length=10, choices=TokenConversionStepStatus.choices, blank=False)
