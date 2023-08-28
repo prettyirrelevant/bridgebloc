@@ -16,6 +16,14 @@ contract RollupBridge is PolygonBridgeLib {
     ISwapRouter public immutable swapRouter;
     IWETH public immutable WETH;
 
+    event BridgeAsset(
+        uint32 destinationNetwork,
+        uint256 amount,
+        address indexed recipient,
+        address indexed sourceToken,
+        address indexed destinationToken
+    );
+
     /**
      * @param _polygonZkEVMBridge Polygon zkevm bridge address
      * @param _counterpartNetwork Couterpart network
@@ -61,6 +69,7 @@ contract RollupBridge is PolygonBridgeLib {
             _beforeBridging(token, amount);  
         }
        _bridgeAsset(destinationAddress, amount, token, forceUpdateGlobalExitRoot, bytes(""));
+       emit BridgeAsset(counterpartNetwork, amount, destinationAddress, token, token);
     }
 
 
@@ -101,6 +110,7 @@ contract RollupBridge is PolygonBridgeLib {
             _beforeBridging(_tokenOut, amount);
         }
         _bridgeAsset(destinationAddress, amountOut, _tokenOut, forceUpdateGlobalExitRoot, bytes(""));
+        emit BridgeAsset(counterpartNetwork, amount, destinationAddress, _tokenIn, _tokenOut);
     }
 
 
