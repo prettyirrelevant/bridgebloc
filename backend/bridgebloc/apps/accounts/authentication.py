@@ -26,7 +26,7 @@ class Web3Authentication(TokenAuthentication):
         msg = self.recreate_signed_message()
         retrieved_address = w3.eth.account.recover_message(
             signable_message=msg,
-            signature=signature.encode(),
+            signature=signature,
         )
         if address != retrieved_address:
             raise AuthenticationFailed('Signature provided is not valid for the address')
