@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Any
 
+from django.db import transaction
 from django.db.models import QuerySet
 
 from rest_framework import status
@@ -14,7 +15,8 @@ from bridgebloc.common.helpers import success_response
 from bridgebloc.common.types import AuthenticatedRequest
 
 from .constants import VALID_CONVERSION_ROUTES
-from .models import TokenConversion
+from .enums import TokenConversionStepStatus, CircleAPIConversionStepType
+from .models import TokenConversion, TokenConversionStep
 from .permissions import IsOwner
 from .serializers import (
     CCTPTokenConversionInitialisationSerializer,
@@ -24,6 +26,7 @@ from .serializers import (
 )
 from .tasks import initiate_circle_api_payment_intent
 from .types import ConversionMethod
+from .utils import get_circle_api_client
 
 
 class ValidTokenConversionRoutesAPIView(APIView):
@@ -68,18 +71,30 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
     def post(self, request: AuthenticatedRequest, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        conversion = TokenConversion.objects.create(
-            creator=request.user,
-            amount=serializer.validated_data['amount'],
-            conversion_type=ConversionMethod.CIRCLE_API,
-            source_chain=serializer.validated_data['source_chain'],
-            source_token=serializer.validated_data['source_token'],
-            destination_address=serializer.validated_data['destination_address'],
-            destination_chain=serializer.validated_data['destination_chain'],
-            destination_token=serializer.validated_data['destination_token'],
-        )
 
-        initiate_circle_api_payment_intent.schedule((conversion.uuid,), delay=2)
+        with transaction.atomic():
+            conversion = TokenConversion.objects.create(
+                creator=request.user,
+                amount=serializer.validated_data['amount'],
+                conversion_type=ConversionMethod.CIRCLE_API,
+                source_chain=serializer.validated_data['source_chain'],
+                source_token=serializer.validated_data['source_token'],
+                destination_address=serializer.validated_data['destination_address'],
+                destination_chain=serializer.validated_data['destination_chain'],
+                destination_token=serializer.validated_data['destination_token'],
+            )
+            circle_client = get_circle_api_client(conversion.source_chain)
+            result = circle_client.create_payment_intent(
+                amount=conversion.amount,
+                chain=conversion.source_chain.to_circle(),
+            )
+            TokenConversionStep.objects.create(
+                metadata=result['data'],
+                conversion=conversion,
+                status=TokenConversionStepStatus.PENDING,
+                step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
+            )
+
         return success_response(data={'id': conversion.uuid}, status_code=status.HTTP_201_CREATED)
 
 
