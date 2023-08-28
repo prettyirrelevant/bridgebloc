@@ -31,6 +31,14 @@ class ChainID(IntEnum):
 
         return self.name.lower().replace('_', '-')
 
+    @classmethod
+    def from_name(cls, name: str) -> 'ChainID':
+        chain_id = cls.__members__.get(name.upper())
+        if chain_id is None:
+            raise ValueError(f'"{name}" is not a valid ChainID')
+
+        return chain_id
+
     def to_circle(self) -> str:
         if self.name.startswith('ETHEREUM'):
             return 'ETH'
