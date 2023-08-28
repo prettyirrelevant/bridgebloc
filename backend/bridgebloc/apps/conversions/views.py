@@ -70,13 +70,13 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         conversion = TokenConversion.objects.create(
             creator=request.user,
-            amount=serializer.data['amount'],
+            amount=serializer.validated_data['amount'],
             conversion_type=ConversionMethod.CIRCLE_API,
-            source_chain=serializer.data['source_chain'],
-            source_token=serializer.data['source_token'],
-            destination_address=serializer.data['destination_address'],
-            destination_chain=serializer.data['destination_chain'],
-            destination_token=serializer.data['destination_token'],
+            source_chain=serializer.validated_data['source_chain'],
+            source_token=serializer.validated_data['source_token'],
+            destination_address=serializer.validated_data['destination_address'],
+            destination_chain=serializer.validated_data['destination_chain'],
+            destination_token=serializer.validated_data['destination_token'],
         )
 
         initiate_circle_api_payment_intent.schedule((conversion.uuid,), delay=2)
