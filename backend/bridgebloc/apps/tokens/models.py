@@ -1,4 +1,7 @@
+from decimal import Decimal
 from typing import ClassVar
+
+from web3.types import Wei
 
 from django.db import models
 
@@ -14,6 +17,12 @@ class Token(UUIDModel, TimestampedModel, models.Model):
     decimals = models.IntegerField('decimals', blank=False)
     coingecko_id = models.CharField('coingecko id', max_length=200, blank=False)
     address = EVMAddressField('address', blank=False, unique=True)
+
+    def convert_from_wei_to_token(self, amount: int) -> Decimal:
+        return Decimal(amount / 10**self.decimals)
+
+    def convert_from_token_to_wei(self, amount: Decimal) -> Wei:
+        return Wei(amount * 10**self.decimals)
 
     class Meta:
         constraints: ClassVar[list] = [

@@ -121,6 +121,9 @@ inline-quotes = "single"
 docstring-quotes = "double"
 multiline-quotes = "double"
 
+[tool.ruff.pylint]
+max-args = 6
+
 [tool.isort]
 profile = "black"
 line_length = 119

@@ -39,6 +39,43 @@ class ChainID(IntEnum):
 
         return chain_id
 
+    def to_cctp_domain(self) -> int:
+        if self in {ChainID.ETHEREUM, ChainID.ETHEREUM_TESTNET}:
+            return 0
+
+        if self in {ChainID.AVALANCHE, ChainID.AVALANCHE_TESTNET}:
+            return 1
+
+        if self in {ChainID.ARBITRUM_ONE, ChainID.ARBITRUM_ONE_TESTNET}:
+            return 3
+
+        raise ValueError(f'{self} is not supported by CCTP')
+
+    def is_valid_cctp_chain(self) -> bool:
+        try:
+            self.to_cctp_domain()
+        except ValueError:
+            return False
+
+        return True
+
+    def to_lxly_domain(self) -> int:
+        if self in {ChainID.ETHEREUM, ChainID.ETHEREUM_TESTNET}:
+            return 0
+
+        if self in {ChainID.POLYGON_ZKEVM, ChainID.POLYGON_ZKEVM_TESTNET}:
+            return 1
+
+        raise ValueError(f'{self} is not supported by LxLy')
+
+    def is_valid_lxly_chain(self) -> bool:
+        try:
+            self.to_lxly_domain()
+        except ValueError:
+            return False
+
+        return True
+
     def to_circle(self) -> str:
         if self.name.startswith('ETHEREUM'):
             return 'ETH'
