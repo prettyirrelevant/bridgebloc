@@ -306,6 +306,9 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
             'leaf_type': polygon_zkevm_bridge_event['leafType'],
             'bridged_amount': polygon_zkevm_bridge_event['amount'],
             'deposit_count': polygon_zkevm_bridge_event['depositCount'],
+            'origin_network': polygon_zkevm_bridge_event['originNetwork'],
+            'origin_address': polygon_zkevm_bridge_event['originAddress'],
+            'destination_network': polygon_zkevm_bridge_event['destinationNetwork'],
             'amount': source_token.convert_from_wei_to_token(rollup_bridge_event['amount']),
             'destination_address': to_checksum_address(polygon_zkevm_bridge_event['destinationAddress']),
         }

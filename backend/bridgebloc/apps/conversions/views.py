@@ -124,6 +124,10 @@ class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
                 step_type=LxLyConversionStepType.GET_MERKLE_PROOF,
                 metadata={
                     'leaf_type': serializer.validated_data['leaf_type'],
+                    'origin_network': serializer.validated_data['origin_network'],
+                    'origin_address': serializer.validated_data['origin_address'],
+                    'destination_network': serializer.validated_data['destination_network'],
+                    'destination_address': serializer.validated_data['destination_address'],
                     'deposit_count': serializer.validated_data['deposit_count'],
                     'bridged_amount': serializer.validated_data['bridged_amount'],
                 },
