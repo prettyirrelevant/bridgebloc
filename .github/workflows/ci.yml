@@ -202,7 +202,15 @@ jobs:
         working-directory: ./contracts
         run: yarn --ignore-scripts
       
-      - name: Run tests
+      - name: Run Eth Mainnet Fork tests
         working-directory: ./contracts
-        run: yarn hardhat --config hardhat-eth-fork.config.ts test
+        run: yarn hardhat --config hardhat-eth-fork.config.ts test ./test/cctp-bridge-eth.spec.ts
+
+      - name: Run Arbitrum One Fork tests
+        working-directory: ./contracts
+	      run: yarn hardhat --config hardhat-arb-fork.config.ts test ./test/cctp-bridge-arb.spec.ts
+      
+      - name: Run Avalanche Fork tests
+        working-directory: ./contracts
+	      run: yarn hardhat --config hardhat-avax-fork.config.ts test ./test/cctp-bridge-avax.spec.ts
 

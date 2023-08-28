@@ -7,6 +7,7 @@ import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 import "./interfaces/IMessageTransmitter.sol";
 import "./interfaces/ITokenMessenger.sol";
+import "./interfaces/IAvaxSwapRouter.sol";
 import "./libraries/BridgeHelper.sol";
 
 contract CrossChainBridge is BridgeUtil {
@@ -18,6 +19,7 @@ contract CrossChainBridge is BridgeUtil {
     uint32 public immutable CCTP_DOMAIN;
 
     ISwapRouter public immutable swapRouter;
+    IAvaxSwapRouter public immutable avaxSwapRouter;
     IERC20 public immutable usdcToken;
     ITokenMessenger public immutable tokenMessenger;
     IMessageTransmitter public immutable messageTransmitter;
@@ -58,6 +60,7 @@ contract CrossChainBridge is BridgeUtil {
             supportedTokens[_supportedTokens[i].token] = _supportedTokens[i];
         }
         swapRouter = ISwapRouter(swapRouterAddr);
+        avaxSwapRouter = IAvaxSwapRouter(swapRouterAddr);
         usdcToken = IERC20(usdcTokenAddr);
         tokenMessenger = ITokenMessenger(tokenMessengerAddr);
         messageTransmitter = IMessageTransmitter(messageTransmitterAddr);
@@ -79,18 +82,32 @@ contract CrossChainBridge is BridgeUtil {
         // Approve UNISWAP Router to spend token
         TransferHelper.safeApprove(_tokenIn, address(swapRouter), amount);
         // Swap The token for USDC
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: _tokenIn,
-                tokenOut: _tokenOut,
-                fee: supportedTokens[_tokenIn].fee,
-                recipient: _recipient,
-                deadline: block.timestamp,
-                amountIn: amount,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        amountOut = swapRouter.exactInputSingle(params);
+        if (CCTP_DOMAIN == 1) {
+            IAvaxSwapRouter.ExactInputSingleParams
+                memory params = IAvaxSwapRouter.ExactInputSingleParams({
+                    tokenIn: _tokenIn,
+                    tokenOut: _tokenOut,
+                    fee: supportedTokens[_tokenIn].fee,
+                    recipient: _recipient,
+                    amountIn: amount,
+                    amountOutMinimum: 0,
+                    sqrtPriceLimitX96: 0
+                });
+            amountOut = avaxSwapRouter.exactInputSingle(params);
+        } else {
+            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+                .ExactInputSingleParams({
+                    tokenIn: _tokenIn,
+                    tokenOut: _tokenOut,
+                    fee: supportedTokens[_tokenIn].fee,
+                    recipient: _recipient,
+                    deadline: block.timestamp,
+                    amountIn: amount,
+                    amountOutMinimum: 0,
+                    sqrtPriceLimitX96: 0
+                });
+            amountOut = swapRouter.exactInputSingle(params);
+        }
     }
 
     /**
@@ -127,7 +144,6 @@ contract CrossChainBridge is BridgeUtil {
         );
         uint256 amountOut = amount;
 
-        // address usdcAddress = address(usdcToken);
         if (sourceToken != address(usdcToken)) {
             amountOut = performSwap(
                 sourceToken,

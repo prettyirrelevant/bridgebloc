@@ -11,3 +11,6 @@ artifacts
 
 # Yarn Files
 yarn-error.log
+
+tokens.json
+config.txt

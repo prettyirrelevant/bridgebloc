@@ -5,8 +5,8 @@ export default {
     networks: {
         hardhat: {
             forking: {
-              url: 'https://arbitrum-goerli.publicnode.com',
-              blockNumber: 37018971
+              url: 'https://avalanche.public-rpc.com',
+              blockNumber: 34453645,
             },
           },
     }
