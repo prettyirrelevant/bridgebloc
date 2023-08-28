@@ -78,13 +78,13 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
         with transaction.atomic():
             conversion = TokenConversion.objects.create(
                 creator=request.user,
-                amount=serializer.data['amount'],
+                amount=serializer.validated_data['amount'],
                 conversion_type=ConversionMethod.CIRCLE_API,
-                source_chain=serializer.data['source_chain'],
-                source_token=serializer.data['source_token'],
-                destination_address=serializer.data['destination_address'],
-                destination_chain=serializer.data['destination_chain'],
-                destination_token=serializer.data['destination_token'],
+                source_chain=serializer.validated_data['source_chain'],
+                source_token=serializer.validated_data['source_token'],
+                destination_address=serializer.validated_data['destination_address'],
+                destination_chain=serializer.validated_data['destination_chain'],
+                destination_token=serializer.validated_data['destination_token'],
             )
             circle_client = get_circle_api_client(conversion.source_chain)
             result = circle_client.create_payment_intent(
@@ -111,21 +111,21 @@ class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
         with transaction.atomic():
             conversion = TokenConversion.objects.create(
                 creator=request.user,
-                amount=serializer.data['amount'],
+                amount=serializer.validated_data['amount'],
                 conversion_type=ConversionMethod.LXLY,
-                source_chain=serializer.data['source_chain'],
-                source_token=serializer.data['source_token'],
-                destination_token=serializer.data['destination_token'],
-                destination_chain=serializer.data['destination_chain'],
-                destination_address=serializer.data['destination_address'],
+                source_chain=serializer.validated_data['source_chain'],
+                source_token=serializer.validated_data['source_token'],
+                destination_token=serializer.validated_data['destination_token'],
+                destination_chain=serializer.validated_data['destination_chain'],
+                destination_address=serializer.validated_data['destination_address'],
             )
             TokenConversionStep.objects.create(
                 conversion=conversion,
                 step_type=LxLyConversionStepType.GET_MERKLE_PROOF,
                 metadata={
-                    'leaf_type': serializer.data['leaf_type'],
-                    'deposit_count': serializer.data['deposit_count'],
-                    'bridged_amount': serializer.data['bridged_amount'],
+                    'leaf_type': serializer.validated_data['leaf_type'],
+                    'deposit_count': serializer.validated_data['deposit_count'],
+                    'bridged_amount': serializer.validated_data['bridged_amount'],
                 },
                 status=TokenConversionStepStatus.PENDING,
             )
@@ -144,21 +144,21 @@ class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
         with transaction.atomic():
             conversion = TokenConversion.objects.create(
                 creator=request.user,
-                amount=serializer.data['amount'],
+                amount=serializer.validated_data['amount'],
                 conversion_type=ConversionMethod.CCTP,
-                source_chain=serializer.data['source_chain'],
-                source_token=serializer.data['source_token'],
-                destination_address=serializer.data['destination_address'],
-                destination_chain=serializer.data['destination_chain'],
-                destination_token=serializer.data['destination_token'],
+                source_chain=serializer.validated_data['source_chain'],
+                source_token=serializer.validated_data['source_token'],
+                destination_address=serializer.validated_data['destination_address'],
+                destination_chain=serializer.validated_data['destination_chain'],
+                destination_token=serializer.validated_data['destination_token'],
             )
             TokenConversionStep.objects.create(
                 conversion=conversion,
                 step_type=CCTPConversionStepType.ATTESTATION_SERVICE_CONFIRMATION,
                 metadata={
-                    'nonce': serializer.data['nonce'],
-                    'source_tx_hash': serializer.data['tx_hash'],
-                    'message_hash': serializer.data['message_hash'],
+                    'nonce': serializer.validated_data['nonce'],
+                    'source_tx_hash': serializer.validated_data['tx_hash'],
+                    'message_hash': serializer.validated_data['message_hash'],
                 },
                 status=TokenConversionStepStatus.PENDING,
             )
