@@ -18,19 +18,15 @@ class Web3Authentication(TokenAuthentication):
         if not is_checksum_address(address):
             raise AuthenticationFailed(detail='Invalid address provided in signature. Make sure it is checksum')
 
-        try:
-            account = Account.objects.get_or_create(address=address, defaults={'address': address})
-        except Account.DoesNotExist as e:
-            raise AuthenticationFailed(detail=f'Account with address {address} does not exist') from e
-
         msg = self.recreate_signed_message()
         retrieved_address = w3.eth.account.recover_message(
             signable_message=msg,
-            signature=signature.encode(),
+            signature=signature,
         )
         if address != retrieved_address:
             raise AuthenticationFailed('Signature provided is not valid for the address')
 
+        account, _ = Account.objects.get_or_create(address=address, defaults={'address': address})
         return account, None
 
     @staticmethod

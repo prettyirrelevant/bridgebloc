@@ -53,8 +53,8 @@ class CircleAPITokenConversionInitialisationSerializer(serializers.Serializer):
     amount = serializers.DecimalField(required=True, max_digits=16, decimal_places=2, min_value=1)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        source_chain = ChainID(attrs['source_chain'].upper())
-        destination_chain = ChainID(attrs['destination_chain'].upper())
+        source_chain = ChainID.from_name(attrs['source_chain'])
+        destination_chain = ChainID.from_name(attrs['destination_chain'])
         if source_chain == destination_chain:
             raise serializers.ValidationError('source_chain cannot be the same as destination_chain')
 
