@@ -5,11 +5,11 @@ from django.db.models import QuerySet
 
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from bridgebloc.apps.accounts.permissions import IsAuthenticated
 from bridgebloc.common.helpers import success_response
 from bridgebloc.common.types import AuthenticatedRequest
 
