@@ -15,7 +15,12 @@ from bridgebloc.common.helpers import success_response
 from bridgebloc.common.types import AuthenticatedRequest
 
 from .constants import VALID_CONVERSION_ROUTES
-from .enums import CCTPConversionStepType, CircleAPIConversionStepType, TokenConversionStepStatus
+from .enums import (
+    CCTPConversionStepType,
+    CircleAPIConversionStepType,
+    LxLyConversionStepType,
+    TokenConversionStepStatus,
+)
 from .models import TokenConversion, TokenConversionStep
 from .permissions import IsOwner
 from .serializers import (
@@ -99,8 +104,33 @@ class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = LxLyTokenConversionInitialisationSerializer
 
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
-        return success_response(data=None)
+    def post(self, request: AuthenticatedRequest, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            conversion = TokenConversion.objects.create(
+                creator=request.user,
+                amount=serializer.data['amount'],
+                conversion_type=ConversionMethod.LXLY,
+                source_chain=serializer.data['source_chain'],
+                source_token=serializer.data['source_token'],
+                destination_token=serializer.data['destination_token'],
+                destination_chain=serializer.data['destination_chain'],
+                destination_address=serializer.data['destination_address'],
+            )
+            TokenConversionStep.objects.create(
+                conversion=conversion,
+                step_type=LxLyConversionStepType.GET_MERKLE_PROOF,
+                metadata={
+                    'leaf_type': serializer.data['leaf_type'],
+                    'deposit_count': serializer.data['deposit_count'],
+                    'bridged_amount': serializer.data['bridged_amount'],
+                },
+                status=TokenConversionStepStatus.PENDING,
+            )
+
+        return success_response(data={'id': conversion.uuid})
 
 
 class CCTPTokenConversionInitialisationAPIView(GenericAPIView):

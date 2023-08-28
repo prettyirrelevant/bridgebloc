@@ -16,7 +16,13 @@ from bridgebloc.evm.types import ChainID
 
 from .models import TokenConversion, TokenConversionStep
 from .types import ConversionMethod
-from .utils import get_cross_chain_bridge_deployment_address, get_token_messenger_deployment_address, is_valid_route
+from .utils import (
+    get_cross_chain_bridge_deployment_address,
+    get_polygon_zkevm_bridge_deployment_address,
+    get_rollup_bridge_deployment_address,
+    get_token_messenger_deployment_address,
+    is_valid_route,
+)
 
 
 class TokenConversionStepSerializer(serializers.ModelSerializer):
@@ -169,11 +175,6 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
                 f'Expected just one `MessageSent` event, got {len(found_message_sent_events)}',
             )
 
-        if to_checksum_address(found_bridge_events[0].address) != cross_chain_bridge_address:
-            raise serializers.ValidationError(
-                f'Expected just one `MessageSent` event, got {len(found_message_sent_events)}',
-            )
-
         bridge_deposit_received_event = found_bridge_events[0].args
         if bridge_deposit_received_event['sourceChain'] != source_chain.to_cctp_domain():
             raise serializers.ValidationError('cctp domain from event and serializer mismatch for source_chain')
@@ -210,4 +211,101 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
 
 class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
     tx_hash = serializers.CharField(required=True)
-    chain = serializers.CharField(required=True)
+    source_chain = serializers.CharField(required=True)
+    destination_chain = serializers.CharField(required=True)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        try:
+            source_chain = ChainID.from_name(attrs['source_chain'])
+            destination_chain = ChainID.from_name(attrs['destination_chain'])
+        except ValueError as e:
+            raise serializers.ValidationError(str(e)) from e
+
+        if source_chain == destination_chain:
+            raise serializers.ValidationError('source_chain cannot be the same as destination_chain')
+
+        if source_chain.is_mainnet() != destination_chain.is_mainnet():
+            raise serializers.ValidationError(
+                'Both source_chain and destination_chain must be on the same network (testnet or mainnet)',
+            )
+
+        evm_client = EVMAggregator().get_client(source_chain)  # pylint:disable=no-value-for-parameter
+        tx_receipt = evm_client.get_transaction_receipt(attrs['tx_hash'])
+        validated_data = self._validate_tx_receipt(
+            client=evm_client,
+            receipt=tx_receipt,
+            source_chain=source_chain,
+            destination_chain=destination_chain,
+        )
+        attrs.update(validated_data)
+        return attrs
+
+    def _validate_tx_receipt(  # pylint: disable=too-many-locals
+        self,
+        client: EVMClient,
+        receipt: TxReceipt,
+        source_chain: ChainID,
+        destination_chain: ChainID,
+    ) -> dict[str, Any]:
+        rollup_bridge_address = get_rollup_bridge_deployment_address(source_chain)
+        rollup_bridge_contract = client.get_contract(name='RollupBridge', address=rollup_bridge_address)
+        polygon_zkevm_bridge_address = get_polygon_zkevm_bridge_deployment_address(source_chain)
+        polygon_zkevm_bridge_contract = client.get_contract(
+            name='PolygonZkEVMBridge',
+            address=polygon_zkevm_bridge_address,
+        )
+
+        found_rollup_bridge_events = rollup_bridge_contract.events.BridgeDepositReceived().process_receipt(
+            receipt,
+            errors=DISCARD,
+        )
+        found_polygon_zkevm_bridge_events = polygon_zkevm_bridge_contract.events.BridgeEvent().process_receipt(
+            receipt,
+            errors=DISCARD,
+        )
+        if len(found_polygon_zkevm_bridge_events) != 1:
+            raise serializers.ValidationError(
+                f'Expected just one `BridgeEvent` event, got {len(found_polygon_zkevm_bridge_events)}',
+            )
+        if len(found_rollup_bridge_events) != 1:
+            raise serializers.ValidationError(
+                f'Expected just one `BridgeDepositReceived` event, got {len(found_polygon_zkevm_bridge_events)}',
+            )
+
+        rollup_bridge_event = found_rollup_bridge_events[0].args
+        polygon_zkevm_bridge_event = found_polygon_zkevm_bridge_events[0].args
+
+        # Currently, we do not support ETH bridging via the API but keep in mind that the
+        # `originNetwork` and `destinationNetwork` are always the same for such a bridging scenario
+        if polygon_zkevm_bridge_event['originNetwork'] != source_chain.to_lxly_domain():
+            raise serializers.ValidationError('lxly domain from event and serializer mismatch for source_chain')
+
+        if polygon_zkevm_bridge_event['destinationNetwork'] != destination_chain.to_lxly_domain():
+            raise serializers.ValidationError('lxly domain from event and serializer mismatch for destination chain')
+
+        if self.context['request'].user.address != to_checksum_address(polygon_zkevm_bridge_event['from']):
+            raise serializers.ValidationError(
+                f'{polygon_zkevm_bridge_event["from"]} does not match the authenticated user',
+            )
+
+        try:
+            source_token = Token.objects.get(
+                chain_id=source_chain,
+                address=to_checksum_address(rollup_bridge_event['sourceToken']),
+            )
+            destination_token = Token.objects.get(
+                chain_id=destination_chain,
+                address=to_checksum_address(rollup_bridge_event['destinationToken']),
+            )
+        except Token.DoesNotExist as e:
+            raise serializers.ValidationError('Token is not supported currently') from e
+
+        return {
+            'source_token': source_token,
+            'destination_token': destination_token,
+            'leaf_type': polygon_zkevm_bridge_event['leafType'],
+            'bridged_amount': polygon_zkevm_bridge_event['amount'],
+            'deposit_count': polygon_zkevm_bridge_event['depositCount'],
+            'amount': source_token.convert_from_wei_to_token(rollup_bridge_event['amount']),
+            'destination_address': to_checksum_address(polygon_zkevm_bridge_event['destinationAddress']),
+        }

@@ -8,9 +8,10 @@ from eth_typing import HexStr
 class AttestationService:
     def __init__(self, base_url: str) -> None:
         self.base_url = base_url
-        self.requests_per_second = 10
-        self.request_interval = 1.0 / self.requests_per_second
         self.last_request_time = 0
+        self.requests_per_second = 10
+        self.session = requests.Session()
+        self.request_interval = 1.0 / self.requests_per_second
 
     def wait_for_rate_limit(self) -> None:
         elapsed_time = time.time() - self.last_request_time
@@ -21,7 +22,7 @@ class AttestationService:
         self.wait_for_rate_limit()
 
         url = f'{self.base_url}/v1/attestations/{message_hash}'
-        response = requests.get(url=url, timeout=10)
+        response = self.session.get(url=url)
         response.raise_for_status()
 
         self.last_request_time = int(time.time())

@@ -1,0 +1,146 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "contract IPolygonZkEVMBridge",
+                "name": "_polygonZkEVMBridge",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "_counterpartNetwork",
+                "type": "uint32"
+            },
+            {
+                "internalType": "address",
+                "name": "swapRouterAddr",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "wethAddr",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "WETH",
+        "outputs": [
+            {
+                "internalType": "contract IWETH",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "destinationAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "bool",
+                "name": "forceUpdateGlobalExitRoot",
+                "type": "bool"
+            }
+        ],
+        "name": "bridgeToken",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "counterpartNetwork",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "polygonZkEVMBridge",
+        "outputs": [
+            {
+                "internalType": "contract IPolygonZkEVMBridge",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_tokenIn",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_tokenOut",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "destinationAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint24",
+                "name": "_fee",
+                "type": "uint24"
+            },
+            {
+                "internalType": "bool",
+                "name": "forceUpdateGlobalExitRoot",
+                "type": "bool"
+            }
+        ],
+        "name": "swapAndBridge",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "swapRouter",
+        "outputs": [
+            {
+                "internalType": "contract ISwapRouter",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]

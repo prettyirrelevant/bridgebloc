@@ -95,8 +95,15 @@ class EVMClient:
         signed_txn = w3.eth.account.sign_transaction(tx_params, sender.key)
         return w3.eth.send_raw_transaction(signed_txn.rawTransaction)
 
-    def get_contract(self, name: Literal['CrossChainBridge', 'TokenMessenger'], address: ChecksumAddress) -> Contract:
+    def get_contract(
+        self,
+        address: ChecksumAddress,
+        name: Literal['CrossChainBridge', 'TokenMessenger', 'PolygonZkEVMBridge', 'RollupBridge'],
+    ) -> Contract:
         if name in {'CrossChainBridge', 'TokenMessenger'} and not self.chain.is_valid_cctp_chain():
+            raise ValueError(f'{name} contract is valid for {self.chain}')
+
+        if name in {'PolygonZkEVMBridge', 'RollupBridge'} and not self.chain.is_valid_lxly_chain():
             raise ValueError(f'{name} contract is valid for {self.chain}')
 
         abi_path = self.abi_dir / f'{name}.abi'

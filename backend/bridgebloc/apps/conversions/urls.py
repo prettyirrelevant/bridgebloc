@@ -12,7 +12,7 @@ from .views import (
 urlpatterns = [
     path('conversions', TokenConversionsAPIView.as_view(), name='all-conversions-by-user'),
     path(
-        'conversions/circle_api',
+        'conversions/circle-api',
         CircleAPITokenConversionInitialisationAPIView.as_view(),
         name='bridge-with-circle-api',
     ),

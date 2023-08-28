@@ -59,6 +59,23 @@ class ChainID(IntEnum):
 
         return True
 
+    def to_lxly_domain(self) -> int:
+        if self in {ChainID.ETHEREUM, ChainID.ETHEREUM_TESTNET}:
+            return 0
+
+        if self in {ChainID.POLYGON_ZKEVM, ChainID.POLYGON_ZKEVM_TESTNET}:
+            return 1
+
+        raise ValueError(f'{self} is not supported by LxLy')
+
+    def is_valid_lxly_chain(self) -> bool:
+        try:
+            self.to_lxly_domain()
+        except ValueError:
+            return False
+
+        return True
+
     def to_circle(self) -> str:
         if self.name.startswith('ETHEREUM'):
             return 'ETH'
