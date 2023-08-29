@@ -57,7 +57,7 @@ def poll_circle_for_deposit_addresses() -> None:
             step.save()
 
             TokenConversionStep.objects.create(
-                metadata=response['data'],
+                metadata={'deposit_tx_hash': None, **response['data']},
                 conversion=step.conversion,
                 status=TokenConversionStepStatus.PENDING,
                 step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT,
@@ -90,7 +90,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
             response = circle_client.get_payment_intent(step.metadata['id'])
 
             if timezone.now() > datetime.fromisoformat(response['data']['expiresOn']):
-                step.metadata = response['data']
+                step.metadata = {'deposit_tx_hash': step.metadata['deposit_tx_hash'], **response['data']}
                 step.status = TokenConversionStepStatus.FAILED
                 step.save()
 
@@ -107,7 +107,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
                 continue
 
             step.status = TokenConversionStepStatus.SUCCESSFUL
-            step.metadata = response['data']
+            step.metadata = {'deposit_tx_hash': step.metadata['deposit_tx_hash'], **response['data']}
             step.save()
 
             logger.info(f'Deposit confirmation for step {step.uuid} succeeded. Proceeding to next step...')
