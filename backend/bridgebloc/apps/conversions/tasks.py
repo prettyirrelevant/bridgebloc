@@ -36,6 +36,7 @@ def poll_circle_for_deposit_addresses() -> None:
 
     steps_needing_deposit_addresses = TokenConversionStep.objects.select_related('conversion').filter(
         status=TokenConversionStepStatus.PENDING,
+        metadata__paymentMethods__0__address__isnull=True,
         step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
     )
 
@@ -88,7 +89,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
             circle_client = get_circle_api_client(step.conversion.source_chain)
             response = circle_client.get_payment_intent(step.metadata['id'])
 
-            if datetime.fromisoformat(response['data']['expiresOn']) > timezone.now():
+            if timezone.now() > datetime.fromisoformat(response['data']['expiresOn']):
                 step.metadata = response['data']
                 step.status = TokenConversionStepStatus.FAILED
                 step.save()
