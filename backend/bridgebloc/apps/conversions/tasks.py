@@ -9,7 +9,7 @@ from web3.types import TxParams
 from django.conf import settings
 from django.utils import timezone
 
-from bridgebloc.evm.aggregator import EVMAggregator, EVMAggregatorConfig
+from bridgebloc.evm.aggregator import EVMAggregator
 
 from .enums import (
     CCTPConversionStepType,
@@ -27,20 +27,6 @@ from .utils import (
 )
 
 logger = logging.getLogger(__name__)
-EVMAggregator.initialize(
-    config=EVMAggregatorConfig(
-        ethereum_endpoints=settings.ETHEREUM_RPC_NODES,
-        avalanche_endpoints=settings.AVALANCHE_RPC_NODES,
-        polygon_pos_endpoints=settings.POLYGON_POS_RPC_NODES,
-        arbitrum_one_endpoints=settings.ARBITRUM_ONE_RPC_NODES,
-        polygon_zkevm_endpoints=settings.POLYGON_ZKEVM_RPC_NODES,
-        ethereum_testnet_endpoints=settings.ETHEREUM_TESTNET_RPC_NODES,
-        avalanche_testnet_endpoints=settings.AVALANCHE_TESTNET_RPC_NODES,
-        polygon_pos_testnet_endpoints=settings.POLYGON_POS_TESTNET_RPC_NODES,
-        arbitrum_one_testnet_endpoints=settings.ARBITRUM_ONE_TESTNET_RPC_NODES,
-        polygon_zkevm_testnet_endpoints=settings.POLYGON_ZKEVM_TESTNET_RPC_NODES,
-    ),
-)
 
 
 @db_periodic_task(crontab(minute=1))

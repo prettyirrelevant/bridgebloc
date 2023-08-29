@@ -4,6 +4,7 @@ from typing import Any
 from django.http import HttpRequest, JsonResponse
 
 from rest_framework import status
+from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
@@ -14,12 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 def custom_exception_handler(exception: Exception, context: dict) -> Response | None:
-    logger.exception(
-        'An exception occurred while handling request %s %s',
-        context['request'].method,
-        context['request'].get_full_path(),
-        exc_info=exception,
-    )
+    if not isinstance(exception, serializers.ValidationError):
+        logger.exception(
+            'An exception occurred while handling request %s %s',
+            context['request'].method,
+            context['request'].get_full_path(),
+            exc_info=exception,
+        )
 
     response = exception_handler(exception, context)
     if response is None:

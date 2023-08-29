@@ -51,6 +51,18 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": true,
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "recipient",
+                "type": "address"
+            },
+            {
                 "indexed": false,
                 "internalType": "uint32",
                 "name": "sourceChain",
@@ -75,19 +87,13 @@
                 "type": "uint256"
             },
             {
-                "indexed": true,
+                "indexed": false,
                 "internalType": "address",
-                "name": "from",
+                "name": "sourceToken",
                 "type": "address"
             },
             {
-                "indexed": true,
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "indexed": true,
+                "indexed": false,
                 "internalType": "address",
                 "name": "destinationToken",
                 "type": "address"
@@ -188,6 +194,19 @@
             }
         ],
         "stateMutability": "pure",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "avaxSwapRouter",
+        "outputs": [
+            {
+                "internalType": "contract IAvaxSwapRouter",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
