@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from typing import Any
 
@@ -11,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from bridgebloc.apps.accounts.permissions import IsAuthenticated
-from bridgebloc.common.helpers import success_response
+from bridgebloc.common.helpers import error_response, success_response
 from bridgebloc.common.types import AuthenticatedRequest
 
 from .constants import VALID_CONVERSION_ROUTES
@@ -41,6 +42,38 @@ class ValidTokenConversionRoutesAPIView(APIView):
                 data[key.name.lower()][k.name.lower()] = v
 
         return success_response(data=data)
+
+
+class CircleTokenConversionDepositTxHashUpdateAPIView(GenericAPIView):
+    queryset = TokenConversion.objects.select_related('creator').prefetch_related('conversion_steps')
+    permission_classes = (IsAuthenticated, IsOwner)
+    lookup_field = 'uuid'
+
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+        obj = self.get_object()
+        step = obj.conversion_steps.filter(step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT).first()
+        if step is None:
+            return error_response(
+                errors=None,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                message='Token conversion is not of Circle API type or deposit address has not been created',
+            )
+
+        tx_hash = request.data['tx_hash']
+
+        def is_transaction_valid(val: str) -> bool:
+            return bool(re.fullmatch('^0x[a-fA-F0-9]{64}', val))
+
+        if not is_transaction_valid(tx_hash):
+            return error_response(
+                errors=None,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                message='Malformed transaction hash provided',
+            )
+
+        step.metadata['deposit_tx_hash'] = tx_hash
+        step.save()
+        return success_response(data=None)
 
 
 class TokenConversionAPIView(RetrieveAPIView):
