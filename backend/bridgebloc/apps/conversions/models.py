@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 from bridgebloc.common.fields import EVMAddressField, EVMChainIDField
@@ -39,6 +41,25 @@ class TokenConversion(UUIDModel, TimestampedModel, models.Model):
     )
     destination_address = EVMAddressField('destination address', blank=False)
     amount = models.DecimalField('amount', max_digits=14, decimal_places=2, blank=False)
+    """
+    Represents the value to be transferred or exchanged based on the bridging method:
+
+    1. For tokens bridged via Circle API:
+       This indicates the quantity of USDC to be transferred.
+
+    2. For tokens bridged via CCTP:
+       This represents the equivalent value of the source_token in USDC.
+
+    3. For tokens bridged via LxLy:
+       This represents the equivalent value of the source_token in terms of the destination_token.
+    """
+
+    @property
+    def actual_amount(self) -> Decimal:
+        if self.conversion_type == ConversionMethod.CIRCLE_API:
+            return self.amount * Decimal('0.96')
+
+        return self.amount * Decimal('0.97')
 
 
 class TokenConversionStep(UUIDModel, TimestampedModel, models.Model):

@@ -1,7 +1,9 @@
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from eth_account import Account
+from eth_utils import to_bytes
 from huey import crontab
 from huey.contrib.djhuey import db_periodic_task, lock_task
 from web3.types import TxParams
@@ -9,6 +11,7 @@ from web3.types import TxParams
 from django.conf import settings
 from django.utils import timezone
 
+from bridgebloc.apps.tokens.models import Token
 from bridgebloc.evm.aggregator import EVMAggregator
 
 from .enums import (
@@ -18,6 +21,7 @@ from .enums import (
     TokenConversionStepStatus,
 )
 from .models import TokenConversionStep
+from .types import ConversionMethod
 from .utils import (
     get_attestation_client,
     get_circle_api_client,
@@ -36,7 +40,7 @@ def poll_circle_for_deposit_addresses() -> None:
 
     steps_needing_deposit_addresses = TokenConversionStep.objects.select_related('conversion').filter(
         status=TokenConversionStepStatus.PENDING,
-        metadata__paymentMethods__0__address__isnull=True,
+        conversion__conversion_type=ConversionMethod.CIRCLE_API,
         step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
     )
 
@@ -78,6 +82,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
     steps_needing_deposit_addresses = TokenConversionStep.objects.select_related('conversion').filter(
         status=TokenConversionStepStatus.PENDING,
         step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT,
+        conversion__conversion_type=ConversionMethod.CIRCLE_API,
     )
 
     logger.info(f'Found {steps_needing_deposit_addresses.count()} steps requiring deposit confirmation.')
@@ -101,7 +106,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
                 response['data']['timeline'][0]['status'] != 'complete'
                 or response['data']['timeline'][0]['context'] not in ('paid', 'overpaid')
                 or len(response['data']['paymentIds']) < 1
-                or response['data']['amountPaid']['amount'] < step.conversion.amount
+                or Decimal(response['data']['amountPaid']['amount']) < step.conversion.amount
             ):
                 logger.info(f'Deposit confirmation for step {step.uuid} is not complete or accurate. Skipping...')
                 continue
@@ -125,7 +130,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
     logger.info('Circle API deposit confirmation check completed.')
 
 
-@db_periodic_task(crontab(minute='*/1'))
+@db_periodic_task(crontab(minute='*/3'))
 @lock_task('send-to-recipient-using-circle-api-lock')
 def send_to_recipient_using_circle_api() -> None:
     logger.info('Starting Circle API withdrawal process for recipients...')
@@ -134,6 +139,7 @@ def send_to_recipient_using_circle_api() -> None:
         metadata__id__isnull=True,
         status=TokenConversionStepStatus.PENDING,
         step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
+        conversion__conversion_type=ConversionMethod.CIRCLE_API,
     )
 
     logger.info(f'Found {steps_needing_withdrawal.count()} steps requiring withdrawal.')
@@ -144,7 +150,7 @@ def send_to_recipient_using_circle_api() -> None:
         try:
             circle_client = get_circle_api_client(step.conversion.destination_chain)
             response = circle_client.make_withdrawal(
-                amount=step.conversion.amount,
+                amount=step.conversion.actual_amount,
                 master_wallet_id=settings.CIRCLE_MASTER_WALLET_ID,
                 chain=step.conversion.destination_chain.to_circle(),
                 destination_address=step.conversion.destination_address,
@@ -168,6 +174,7 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
     steps_needing_withdrawal = TokenConversionStep.objects.select_related('conversion').filter(
         metadata__id__isnull=False,
         status=TokenConversionStepStatus.PENDING,
+        conversion__conversion_type=ConversionMethod.CIRCLE_API,
         step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
     )
 
@@ -179,7 +186,10 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
         try:
             circle_client = get_circle_api_client(step.conversion.destination_chain)
             response = circle_client.get_withdrawal_info(step.metadata['id'])
-            if response['data']['status'] == 'running' and response['data']['transactionHash'] is not None:
+            if (
+                response['data']['status'] in {'running', 'complete'}
+                and response['data']['transactionHash'] is not None
+            ):
                 step.metadata = response['data']
                 step.status = TokenConversionStepStatus.SUCCESSFUL
                 step.save()
@@ -188,7 +198,7 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
 
             if response['data']['status'] == 'failed':
                 error_code = response['data']['errorCode']
-                step.metadata = {}
+                step.metadata = response['data']
                 step.save()
 
                 logger.warning(f'Withdrawal for step {step.uuid} failed with error code {error_code}. Will retry...')
@@ -204,13 +214,14 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
 def check_for_cctp_attestation_confirmation() -> None:
     steps_waiting_for_attestation_confirmation = TokenConversionStep.objects.select_related('conversion').filter(
         status=TokenConversionStepStatus.PENDING,
+        conversion__conversion_type=ConversionMethod.CCTP,
         step_type=CCTPConversionStepType.ATTESTATION_SERVICE_CONFIRMATION,
     )
     for step in steps_waiting_for_attestation_confirmation:
         try:
             attestation_client = get_attestation_client(step.conversion.source_chain)
             result = attestation_client.get_attestation(step.metadata['message_hash'])
-            if result['data']['status'] != 'complete':
+            if result['status'] != 'complete':
                 logger.info(
                     f'Attestation not found or still pending for hash: {step.metadata["message_hash"]}. Skipping...',
                 )
@@ -222,8 +233,8 @@ def check_for_cctp_attestation_confirmation() -> None:
             TokenConversionStep.objects.create(
                 metadata={
                     'nonce': step.metadata['nonce'],
-                    'attestation': result['data']['attestation'],
-                    'message_hash': step.metadata['message_hash'],
+                    'attestation': result['attestation'],
+                    'message_bytes': step.metadata['message_bytes'],
                 },
                 conversion=step.conversion,
                 status=TokenConversionStepStatus.PENDING,
@@ -234,14 +245,16 @@ def check_for_cctp_attestation_confirmation() -> None:
             continue
 
 
-@db_periodic_task(crontab(minute='*/5'))
+@db_periodic_task(crontab(minute='*/3'))
 @lock_task('cctp-send-token-to-recipient-lock')
 def cctp_send_token_to_recipient() -> None:
     recipient_credit_steps = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
         metadata__tx_hash__isnull=True,
         status=TokenConversionStepStatus.PENDING,
+        conversion__conversion_type=ConversionMethod.CCTP,
         step_type=CCTPConversionStepType.SEND_TO_RECIPIENT,
     )
+    usdc_token = Token.objects.filter(symbol='usdc').first()
     for step in recipient_credit_steps:
         try:
             evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
@@ -250,21 +263,17 @@ def cctp_send_token_to_recipient() -> None:
                 address=get_cross_chain_bridge_deployment_address(step.conversion.destination_chain),
             )
             deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
-            send_to_recipient_fn__call = contract.functions.sendToRecipient(
-                step.metadata['message_hash'],
-                step.metadata['attestation'],
+            send_to_recipient_fn_call = contract.functions.sendToRecipient(
+                to_bytes(hexstr=step.metadata['message_bytes']),
+                to_bytes(hexstr=step.metadata['attestation']),
                 step.metadata['nonce'],
-                step.conversion.destination_token.convert_from_token_to_wei(step.conversion.amount),
+                int(usdc_token.convert_from_token_to_wei(step.conversion.actual_amount)),
                 step.conversion.destination_token.address,
                 step.conversion.destination_address,
             )
-            unsigned_tx = send_to_recipient_fn__call.build_transaction(
+            unsigned_tx = send_to_recipient_fn_call.build_transaction(
                 TxParams(
                     {
-                        'type': 2,
-                        'maxFeePerGas': '',
-                        'maxPriorityFeePerGas': '',
-                        'gas': 0,
                         'from': deployer.address,
                         'chainId': step.conversion.destination_chain.value,
                     },
@@ -284,6 +293,7 @@ def cctp_send_token_to_recipient() -> None:
 def get_lxly_merkle_proofs() -> None:
     steps_requiring_merkle_proofs = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
         status=TokenConversionStepStatus.PENDING,
+        conversion__conversion_type=ConversionMethod.LXLY,
         step_type=LxLyConversionStepType.GET_MERKLE_PROOF,
     )
     for step in steps_requiring_merkle_proofs:
@@ -317,11 +327,12 @@ def get_lxly_merkle_proofs() -> None:
             continue
 
 
-@db_periodic_task(crontab(minute='*/1'))
+@db_periodic_task(crontab(minute='*/3'))
 @lock_task('claim-assets-at-destination-lxly-lock')
 def claim_assets_at_destination_lxly() -> None:
     claim_assets_steps = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
         status=TokenConversionStepStatus.PENDING,
+        conversion__conversion_type=ConversionMethod.LXLY,
         step_type=LxLyConversionStepType.SEND_TO_RECIPIENT,
     )
     for step in claim_assets_steps:
@@ -333,24 +344,20 @@ def claim_assets_at_destination_lxly() -> None:
             )
             deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
             send_to_recipient_fn__call = contract.functions.claimAsset(
-                step.metadata['merkle_proof'],
+                [to_bytes(hexstr=i) for i in step.metadata['merkle_proof']],
                 step.metadata['deposit_count'],
-                step.metadata['main_exit_root'],
-                step.metadata['rollup_exit_root'],
+                to_bytes(hexstr=step.metadata['main_exit_root']),
+                to_bytes(hexstr=step.metadata['rollup_exit_root']),
                 step.metadata['origin_network'],
                 step.metadata['origin_address'],
                 step.metadata['destination_network'],
                 step.metadata['destination_address'],
-                step.metadata['bridged_amount'],
-                '',  # I'm not entirely sure how to pass an empty byte to a contract call
+                step.metadata['bridged_amount'],  # fee is included during contract call
+                b'',  # I'm not entirely sure how to pass an empty byte to a contract call
             )
             unsigned_tx = send_to_recipient_fn__call.build_transaction(
                 TxParams(
                     {
-                        'type': 2,
-                        'maxFeePerGas': '',
-                        'maxPriorityFeePerGas': '',
-                        'gas': 0,
                         'from': deployer.address,
                         'chainId': step.conversion.destination_chain.value,
                     },

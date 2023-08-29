@@ -17,7 +17,7 @@ from web3.contract.contract import Contract
 from web3.exceptions import TransactionNotFound, Web3Exception
 from web3.middleware.cache import construct_simple_cache_middleware
 from web3.middleware.geth_poa import geth_poa_middleware
-from web3.types import ABIEvent, LogReceipt, TxData, TxParams, TxReceipt, Wei
+from web3.types import ABIEvent, LogReceipt, TxData, TxParams, TxReceipt
 from web3.utils.caching import SimpleCache
 
 from bridgebloc.evm.constants import DEFAULT_RPC_TIMEOUT
@@ -41,7 +41,7 @@ def query_all_nodes() -> Callable:
                     if isinstance(e, TransactionNotFound):
                         raise
 
-                    logger.warning(f'Failed to query {endpoint} for {fn.__name__!r} due to {e!s}')
+                    logger.exception(f'Failed to query {endpoint} for {fn.__name__!r} due to:')
                     continue
 
                 return response
@@ -85,12 +85,8 @@ class EVMClient:
         tx_params: TxParams,
         sender: LocalAccount,
     ) -> HexBytes:
-        max_priority_fee, max_fee = self._get_gas_params(w3)
-        tx_params['chainId'] = self.chain
-        tx_params['maxFeePerGas'] = max_fee
-        tx_params['maxPriorityFeePerGas'] = max_priority_fee
+        tx_params['chainId'] = self.chain.value
         tx_params['nonce'] = w3.eth.get_transaction_count(sender.address)
-        tx_params['gas'] = w3.eth.estimate_gas(tx_params)
 
         signed_txn = w3.eth.account.sign_transaction(tx_params, sender.key)
         return w3.eth.send_raw_transaction(signed_txn.rawTransaction)
@@ -167,10 +163,3 @@ class EVMClient:
         parsed_url = urlparse(endpoint)
         if parsed_url.scheme != 'https' or not parsed_url.netloc:
             raise ValueError('Provided URL is not secured or invalid')
-
-    @staticmethod
-    def _get_gas_params(w3: Web3) -> tuple[Wei, Wei]:
-        base_fee = w3.eth.get_block('pending')['baseFeePerGas']
-        max_priority_fee_per_gas = w3.eth.max_priority_fee
-        max_fee_per_gas = Wei(base_fee + max_priority_fee_per_gas)
-        return max_priority_fee_per_gas, max_fee_per_gas

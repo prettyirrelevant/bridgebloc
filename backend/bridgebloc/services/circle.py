@@ -84,7 +84,7 @@ class CircleAPI:
 
     def get_withdrawal_info(self, withdrawal_id: str) -> dict[str, Any]:
         response = self._request(
-            method='POST',
+            method='GET',
             endpoint=f'v1/transfers/{withdrawal_id}',
         )
         return response.json()

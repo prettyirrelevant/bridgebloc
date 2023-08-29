@@ -94,7 +94,7 @@ class TokenConversionsAPIView(ListAPIView):
 
     def get_queryset(self) -> QuerySet:
         qs = super().get_queryset()
-        return qs.filter(creator=self.request.user)
+        return qs.filter(creator=self.request.user).order_by('-created_at')
 
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: A003
         response = super().list(request, *args, **kwargs)
@@ -167,7 +167,7 @@ class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
                 status=TokenConversionStepStatus.PENDING,
             )
 
-        return success_response(data={'id': conversion.uuid})
+        return success_response(data={'id': conversion.uuid}, status_code=status.HTTP_201_CREATED)
 
 
 class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
@@ -196,8 +196,9 @@ class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
                     'nonce': serializer.validated_data['nonce'],
                     'source_tx_hash': serializer.validated_data['tx_hash'],
                     'message_hash': serializer.validated_data['message_hash'],
+                    'message_bytes': serializer.validated_data['message_bytes'],
                 },
                 status=TokenConversionStepStatus.PENDING,
             )
 
-        return success_response(data={'id': conversion.uuid})
+        return success_response(data={'id': conversion.uuid}, status_code=status.HTTP_201_CREATED)

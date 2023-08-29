@@ -14,9 +14,8 @@ async function deploy(network: Network, chain: Chain) {
   ]);
 
   await bridge.waitForDeployment();
-  console.log(bridge.target);
+  console.log(`Rollup Bridge Deployed At: ${bridge.target} Chain: ${chain} Network: ${network}`);
 }
 
-deploy("testnet", "zkEVM").catch((error) => console.log(error));
-
-//zkEVM TestnetAddr= 0x4a0a5D875322De27e170f7c6E3678d47f711A50F
+// deploy("testnet", "zkEVM").catch((error) => console.log(error));
+// deploy("testnet", "eth").catch((error) => console.log(error));

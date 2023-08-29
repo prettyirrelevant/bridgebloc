@@ -43,7 +43,9 @@ class Command(BaseCommand):
             ChainID.AVALANCHE_TESTNET: [
                 ('0x5425890298aed601595a70AB815c96711a31Bc65', 'usd-coin'),
             ],
-            ChainID.POLYGON_ZKEVM_TESTNET: [],
+            ChainID.POLYGON_ZKEVM_TESTNET: [
+                ('0xA40b0dA87577Cd224962e8A3420631E1C4bD9A9f', 'usd-coin'),
+            ],
         }
         testnet_tokens = []
         for chain_id, tokens in token_addresses.items():
@@ -76,6 +78,9 @@ class Command(BaseCommand):
         tokens = []
         for chain_id in ChainID:
             if not chain_id.is_mainnet():
+                continue
+
+            if chain_id == ChainID.POLYGON_ZKEVM and token_data['id'] == 'weth':
                 continue
 
             tokens.append(

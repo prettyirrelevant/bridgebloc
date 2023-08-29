@@ -128,6 +128,9 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
                 'Both source_chain and destination_chain must be on the same network (testnet or mainnet)',
             )
 
+        if not is_valid_route(source_chain, destination_chain, ConversionMethod.CCTP):
+            raise serializers.ValidationError('CCTP not supported for the source and destination chain')
+
         evm_client = EVMAggregator().get_client(source_chain)  # pylint:disable=no-value-for-parameter
         tx_receipt = evm_client.get_transaction_receipt(attrs['tx_hash'])
         info = self._validate_tx_receipt(
@@ -199,13 +202,17 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
         except Token.DoesNotExist as e:
             raise serializers.ValidationError('Token is not supported currently') from e
 
+        usdc_token = Token.objects.filter(symbol='usdc').first()
         return {
             'source_token': source_token,
+            'source_chain': source_chain,
             'destination_token': destination_token,
+            'destination_chain': destination_chain,
             'nonce': bridge_deposit_received_event['nonce'],
+            'message_bytes': found_message_sent_events[0].args.message.hex(),
             'message_hash': Web3.keccak(found_message_sent_events[0].args.message).hex(),
             'destination_address': to_checksum_address(bridge_deposit_received_event['recipient']),
-            'amount': source_token.convert_from_wei_to_token(bridge_deposit_received_event['amount']),
+            'amount': usdc_token.convert_from_wei_to_token(bridge_deposit_received_event['amount']),
         }
 
 
@@ -228,6 +235,9 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Both source_chain and destination_chain must be on the same network (testnet or mainnet)',
             )
+
+        if not is_valid_route(source_chain, destination_chain, ConversionMethod.LXLY):
+            raise serializers.ValidationError('LxLy not supported for the source and destination chain')
 
         evm_client = EVMAggregator().get_client(source_chain)  # pylint:disable=no-value-for-parameter
         tx_receipt = evm_client.get_transaction_receipt(attrs['tx_hash'])
@@ -276,7 +286,7 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
         polygon_zkevm_bridge_event = found_polygon_zkevm_bridge_events[0].args
 
         # Currently, we do not support ETH bridging via the API but keep in mind that the
-        # `originNetwork` and `destinationNetwork` are always the same for such a bridging scenario
+        # `originNetwork` and `destinationNetwork` are always the same for such scenarios
         if polygon_zkevm_bridge_event['originNetwork'] != source_chain.to_lxly_domain():
             raise serializers.ValidationError('lxly domain from event and serializer mismatch for source_chain')
 
@@ -302,13 +312,15 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
 
         return {
             'source_token': source_token,
+            'source_chain': source_chain,
             'destination_token': destination_token,
+            'destination_chain': destination_chain,
             'leaf_type': polygon_zkevm_bridge_event['leafType'],
             'bridged_amount': polygon_zkevm_bridge_event['amount'],
             'deposit_count': polygon_zkevm_bridge_event['depositCount'],
             'origin_network': polygon_zkevm_bridge_event['originNetwork'],
             'origin_address': polygon_zkevm_bridge_event['originAddress'],
             'destination_network': polygon_zkevm_bridge_event['destinationNetwork'],
-            'amount': source_token.convert_from_wei_to_token(rollup_bridge_event['amount']),
+            'amount': destination_token.convert_from_wei_to_token(rollup_bridge_event['amount']),
             'destination_address': to_checksum_address(polygon_zkevm_bridge_event['destinationAddress']),
         }
