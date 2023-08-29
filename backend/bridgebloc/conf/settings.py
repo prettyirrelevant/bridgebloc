@@ -362,10 +362,5 @@ if not DEBUG:
                 'handlers': ['console'],
                 'propagate': False,
             },
-            'huey.consumer': {
-                'level': 'INFO',
-                'handlers': ['console'],
-                'propagate': False,
-            },
         },
     }

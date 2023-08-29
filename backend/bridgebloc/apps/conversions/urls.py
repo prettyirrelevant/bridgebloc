@@ -19,5 +19,5 @@ urlpatterns = [
     path('conversions/cctp', CCTPTokenConversionInitialisationAPIView.as_view(), name='bridge-with-cctp'),
     path('conversions/lxly', LxLyTokenConversionInitialisationAPIView.as_view(), name='bridge-with-lxly'),
     path('conversions/routes', ValidTokenConversionRoutesAPIView.as_view(), name='valid-routes'),
-    path('conversion/<str:uuid>', TokenConversionAPIView.as_view(), name='get-conversion'),
+    path('conversions/<str:uuid>', TokenConversionAPIView.as_view(), name='get-conversion'),
 ]

@@ -52,8 +52,7 @@ class CircleAPI:
     def get_payment_intent(self, payment_intent_id: str) -> dict[str, Any]:
         response = self._request(
             method='GET',
-            endpoint='v1/paymentIntents',
-            data={'id': payment_intent_id},
+            endpoint=f'v1/paymentIntents/{payment_intent_id}',
         )
         return response.json()
 
