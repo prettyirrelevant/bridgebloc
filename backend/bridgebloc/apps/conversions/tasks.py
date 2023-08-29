@@ -29,7 +29,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
-@db_periodic_task(crontab(minute=1))
+@db_periodic_task(crontab(minute='*/1'))
 @lock_task('poll-circle-for-deposit-addresses-lock')
 def poll_circle_for_deposit_addresses() -> None:
     logger.info('Starting Circle API deposit addresses polling...')
@@ -69,7 +69,7 @@ def poll_circle_for_deposit_addresses() -> None:
         logger.info('Circle API deposit address polling completed.')
 
 
-@db_periodic_task(crontab(minute=3))
+@db_periodic_task(crontab(minute='*/2'))
 @lock_task('check-for-circle-api-deposit-confirmation')
 def check_for_circle_api_deposit_confirmation() -> None:
     logger.info('Starting Circle API deposit confirmation checks...')
@@ -124,7 +124,7 @@ def check_for_circle_api_deposit_confirmation() -> None:
     logger.info('Circle API deposit confirmation check completed.')
 
 
-@db_periodic_task(crontab(minute=1))
+@db_periodic_task(crontab(minute='*/1'))
 @lock_task('send-to-recipient-using-circle-api-lock')
 def send_to_recipient_using_circle_api() -> None:
     logger.info('Starting Circle API withdrawal process for recipients...')
@@ -159,7 +159,7 @@ def send_to_recipient_using_circle_api() -> None:
         logger.info('Circle API withdrawal process completed successfully.')
 
 
-@db_periodic_task(crontab(minute=3))
+@db_periodic_task(crontab(minute='*/2'))
 @lock_task('wait-for-minimum-confirmation-for-circle-api-withdrawals-lock')
 def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
     logger.info('Starting withdrawal confirmation check for Circle API withdrawals...')
@@ -198,7 +198,7 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
     logger.info('Withdrawals confirmation check completed.')
 
 
-@db_periodic_task(crontab(minute=2))
+@db_periodic_task(crontab(minute='*/2'))
 @lock_task('check-for-cctp-attestation-confirmation-lock')
 def check_for_cctp_attestation_confirmation() -> None:
     steps_waiting_for_attestation_confirmation = TokenConversionStep.objects.select_related('conversion').filter(
@@ -233,7 +233,7 @@ def check_for_cctp_attestation_confirmation() -> None:
             continue
 
 
-@db_periodic_task(crontab(minute=5))
+@db_periodic_task(crontab(minute='*/5'))
 @lock_task('cctp-send-token-to-recipient-lock')
 def cctp_send_token_to_recipient() -> None:
     recipient_credit_steps = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
@@ -278,7 +278,7 @@ def cctp_send_token_to_recipient() -> None:
             continue
 
 
-@db_periodic_task(crontab(minute=3))
+@db_periodic_task(crontab(minute='*/2'))
 @lock_task('get-lxly-merkle-proofs-lock')
 def get_lxly_merkle_proofs() -> None:
     steps_requiring_merkle_proofs = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
@@ -316,7 +316,7 @@ def get_lxly_merkle_proofs() -> None:
             continue
 
 
-@db_periodic_task(crontab(minute=3))
+@db_periodic_task(crontab(minute='*/1'))
 @lock_task('claim-assets-at-destination-lxly-lock')
 def claim_assets_at_destination_lxly() -> None:
     claim_assets_steps = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
