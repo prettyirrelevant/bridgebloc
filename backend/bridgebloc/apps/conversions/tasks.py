@@ -48,7 +48,7 @@ def poll_circle_for_deposit_addresses() -> None:
         circle_client = get_circle_api_client(step.conversion.source_chain)
         try:
             response = circle_client.get_payment_intent(step.metadata['id'])
-            if not response['data']['paymentMethods'][0]['address']:
+            if response['data']['paymentMethods'][0].get('address') is None:
                 logger.info(f'No deposit address found for Token Conversion: {step.conversion.uuid}. Skipping...')
                 continue
 
