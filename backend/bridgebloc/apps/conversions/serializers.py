@@ -269,7 +269,7 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
             address=polygon_zkevm_bridge_address,
         )
 
-        found_rollup_bridge_events = rollup_bridge_contract.events.BridgeDepositReceived().process_receipt(
+        found_rollup_bridge_events = rollup_bridge_contract.events.BridgeAsset().process_receipt(
             receipt,
             errors=DISCARD,
         )
@@ -283,7 +283,7 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
             )
         if len(found_rollup_bridge_events) != 1:
             raise serializers.ValidationError(
-                f'Expected just one `BridgeDepositReceived` event, got {len(found_polygon_zkevm_bridge_events)}',
+                f'Expected just one `BridgeAsset` event, got {len(found_polygon_zkevm_bridge_events)}',
             )
 
         rollup_bridge_event = found_rollup_bridge_events[0].args
