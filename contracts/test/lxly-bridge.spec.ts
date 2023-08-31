@@ -1,11 +1,12 @@
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
-import ISwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
+// import ISwapRouter from "@uniswap/v3-periphery/artifacts/contracts/SwapRouter.sol/SwapRouter.json";
+import ISwapRouter from "../../contracts/config/abi/ISwapRouter.json";
 import IERC20Metadata from "@openzeppelin/contracts/build/contracts/IERC20Metadata.json";
 import { expect } from "chai";
 import hre, { ethers } from "hardhat";
 import { deploymentVariablesDict } from "../config/lxly";
-import { Contract, parseEther, parseUnits } from "ethers";
+import { Contract, formatEther, parseEther, parseUnits } from "ethers";
 
 import bridge from "../artifacts/contracts/LxLy/polygonZKEVMContracts/PolygonZkEVMBridge.sol/PolygonZkEVMBridge.json";
 
@@ -17,11 +18,12 @@ describe("LXLY Bridge Tests", function () {
     // Contracts are deployed using the first signer/account by default
     const [owner, otherAccount] = await ethers.getSigners();
 
-    const deploymentVariables = deploymentVariablesDict["mainnet"]["eth"];
+    const deploymentVariables = deploymentVariablesDict["mainnet"]["zkEVM"];
 
     const RollupBridge = await ethers.getContractFactory("RollupBridge");
     const zeroAddress = "0x0000000000000000000000000000000000000000";
     const rollupBridge = await RollupBridge.deploy(
+      deploymentVariables.supportedDepositTokens,
       deploymentVariables.polygonZkEVMBridge,
       deploymentVariables.counterpartNetwork,
       deploymentVariables.swapRouterAddr,
@@ -74,19 +76,26 @@ describe("LXLY Bridge Tests", function () {
       const { rollupBridge, otherAccount } = await loadFixture(deployBridge);
 
       const amount = parseEther("1");
+
       await expect(
-        rollupBridge.bridgeToken(
-          otherAccount.address,
+        rollupBridge.bridge(
           amount,
           "0x0000000000000000000000000000000000000000",
+          "0x0000000000000000000000000000000000000000",
+          otherAccount.address,
           true
         )
       ).to.be.revertedWith("msg value not equal to amount");
     });
 
     it("Should  bridge a token successfully", async function () {
-      const { rollupBridge, otherAccount, polygonZkEVMBridge, zeroAddress } =
-        await loadFixture(deployBridge);
+      const {
+        rollupBridge,
+        otherAccount,
+        polygonZkEVMBridge,
+        zeroAddress,
+        owner,
+      } = await loadFixture(deployBridge);
       // 0x7379a261bC347BDD445484A91648Abf4A2BDEe5E
       const recipient = otherAccount.address;
       const bridgeContract = new Contract(
@@ -94,21 +103,42 @@ describe("LXLY Bridge Tests", function () {
         bridge.abi,
         otherAccount
       );
-
       const amount = parseEther("1");
-      const bridgeTxn = rollupBridge.bridgeToken(
-        recipient,
+      const swapAmountAfterFee = parseEther("0.97");
+      const bridgeAddr = await bridgeContract.getAddress();
+      const rollUpAddr = await rollupBridge.getAddress();
+      const bridgeTxn = await rollupBridge.bridge(
         amount,
-        zeroAddress,
+        "0x0000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000",
+        otherAccount.address,
         true,
         {
           value: amount,
         }
       );
       await expect(bridgeTxn).to.not.be.reverted;
+
       await expect(bridgeTxn)
         .to.emit(bridgeContract, "BridgeEvent")
-        .withArgs(0, 0, zeroAddress, 1, recipient, amount, anyValue, anyValue);
+        .withArgs(
+          0,
+          0,
+          zeroAddress,
+          0,
+          recipient,
+          swapAmountAfterFee,
+          anyValue,
+          anyValue
+        );
+      await expect(bridgeTxn).to.changeEtherBalances(
+        [bridgeAddr, owner, rollUpAddr],
+        [
+          `${swapAmountAfterFee}`,
+          `-${amount.toString()}`,
+          `${parseEther("0.03")}`,
+        ]
+      );
     });
 
     it("Should  bridge an erc20 token successfully", async function () {
@@ -124,11 +154,12 @@ describe("LXLY Bridge Tests", function () {
 
       const block = await hre.ethers.provider.getBlock("latest");
       const blockTimestamp = block ? block.timestamp : 0;
-      const usdcToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+      const usdcToken = "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035";
 
       const swapRouter = new ethers.Contract(
         swapRouterAddr,
-        ISwapRouter.abi,
+        ISwapRouter,
+        // ISwapRouter.abi,
         owner
       );
       const usdcContract = new ethers.Contract(
@@ -141,17 +172,16 @@ describe("LXLY Bridge Tests", function () {
       let swapParam = {
         tokenIn: WETH,
         tokenOut: usdcToken,
-        fee: 500,
         recipient: owner.address,
         deadline: blockTimestamp + 100,
         amountIn: ethers.parseEther(swapAmount),
         amountOutMinimum: 0,
-        sqrtPriceLimitX96: 0,
+        limitSqrtPrice: 0,
       };
       await swapRouter.exactInputSingle(swapParam, {
         value: ethers.parseEther(swapAmount),
       });
-      await swapRouter.refundETH();
+      // await swapRouter.refundETH();
       const bridgeContract = new Contract(
         polygonZkEVMBridge,
         bridge.abi,
@@ -159,25 +189,37 @@ describe("LXLY Bridge Tests", function () {
       );
 
       const amount = parseUnits("1", await usdcContract.decimals());
+      const bridgedAmount = parseUnits("0.97", await usdcContract.decimals()); //minus 3% fee
       await usdcContract.approve(await rollupBridge.getAddress(), amount);
       const recipient = otherAccount.address;
 
-      const bridgeTxn = rollupBridge.bridgeToken(
-        recipient,
+      const bridgeTxn = rollupBridge.bridge(
         amount,
         usdcToken,
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", //usdc Address on destination
+        otherAccount.address,
         true
       );
+      const rollUpAddr = await rollupBridge.getAddress();
       await expect(bridgeTxn).to.not.be.reverted;
+      await expect(bridgeTxn).to.changeTokenBalances(
+        usdcContract,
+        [owner.address, polygonZkEVMBridge, rollUpAddr],
+        [
+          `-${amount.toString()}`,
+          `${"0".toString()}`,
+          `${(amount - bridgedAmount).toString()}`,
+        ]
+      );
       await expect(bridgeTxn)
         .to.emit(bridgeContract, "BridgeEvent")
         .withArgs(
           0,
           0,
           "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-          1,
+          0,
           recipient,
-          amount,
+          bridgedAmount,
           anyValue,
           anyValue
         );
@@ -195,12 +237,12 @@ describe("LXLY Bridge Tests", function () {
       );
 
       const amount = parseEther("1");
-      const bridgeTxn = rollupBridge.swapAndBridge(
-        zeroAddress,
-        outputToken,
-        recipient,
+
+      const bridgeTxn = await rollupBridge.bridge(
         amount,
-        500,
+        "0x0000000000000000000000000000000000000000",
+        outputToken, //usdc Address on destination
+        otherAccount.address,
         true,
         {
           value: amount,
@@ -213,7 +255,7 @@ describe("LXLY Bridge Tests", function () {
           0,
           0,
           outputToken,
-          1,
+          0,
           recipient,
           anyValue,
           anyValue,
@@ -234,11 +276,12 @@ describe("LXLY Bridge Tests", function () {
 
       const block = await hre.ethers.provider.getBlock("latest");
       const blockTimestamp = block ? block.timestamp : 0;
-      const usdcToken = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+      const usdcToken = "0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035";
 
       const swapRouter = new ethers.Contract(
         swapRouterAddr,
-        ISwapRouter.abi,
+        ISwapRouter,
+        // ISwapRouter.abi,
         owner
       );
       const usdcContract = new ethers.Contract(
@@ -251,17 +294,16 @@ describe("LXLY Bridge Tests", function () {
       let swapParam = {
         tokenIn: WETH,
         tokenOut: usdcToken,
-        fee: 500,
         recipient: owner.address,
         deadline: blockTimestamp + 100,
         amountIn: ethers.parseEther(swapAmount),
         amountOutMinimum: 0,
-        sqrtPriceLimitX96: 0,
+        limitSqrtPrice: 0,
       };
       await swapRouter.exactInputSingle(swapParam, {
         value: ethers.parseEther(swapAmount),
       });
-      await swapRouter.refundETH();
+      // await swapRouter.refundETH();
       const bridgeContract = new Contract(
         polygonZkEVMBridge,
         bridge.abi,
@@ -271,14 +313,16 @@ describe("LXLY Bridge Tests", function () {
       const amount = parseUnits("1", await usdcContract.decimals());
       await usdcContract.approve(await rollupBridge.getAddress(), amount);
       const recipient = otherAccount.address;
-      const outputToken = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
-      const bridgeTxn = rollupBridge.swapAndBridge(
-        usdcToken,
-        outputToken,
-        recipient,
+      const outputToken = "0x0000000000000000000000000000000000000000"; //receive ether
+      const bridgeTxn = rollupBridge.bridge(
         amount,
-        3000,
-        true
+        usdcToken,
+        outputToken, //raw eth Address on zkEVM
+        otherAccount.address,
+        true,
+        {
+          value: amount,
+        }
       );
 
       //   await expect(bridgeTxn).to.not.be.reverted;
@@ -288,7 +332,7 @@ describe("LXLY Bridge Tests", function () {
           0,
           0,
           outputToken,
-          1,
+          0,
           recipient,
           anyValue,
           anyValue,

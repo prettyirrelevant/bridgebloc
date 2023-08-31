@@ -12,6 +12,11 @@ const config: HardhatUserConfig = {
     version: "0.8.17",
   },
   networks: {
+    hardhat: {
+      forking: {
+        url: `https://zkevm-rpc.com`,
+      },
+    },
     goerli: {
       url: `https://goerli.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [PRIVATE_KEY],
@@ -21,20 +26,12 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
     },
     arbitrum: {
-      url: 'https://arbitrum-one.public.blastapi.io',
+      url: "",
       accounts: [PRIVATE_KEY],
     },
     arbitrumTestnet: {
-      url: 'https://arbitrum-goerli.publicnode.com',
-      accounts: [PRIVATE_KEY]
-    },
-    avalanche: {
-      url: 'https://avalanche.public-rpc.com',
+      url: "https://arbitrum-goerli.publicnode.com",
       accounts: [PRIVATE_KEY],
-    },
-    avalancheTestnet: {
-      url: 'https://avalanche-fuji-c-chain.publicnode.com',
-      accounts: [PRIVATE_KEY]
     },
     zkEVM: { url: "https://zkevm-rpc.com", accounts: [PRIVATE_KEY] },
     zkEVMTestnet: {
