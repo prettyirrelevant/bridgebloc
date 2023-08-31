@@ -259,4 +259,14 @@ contract CrossChainBridge is BridgeUtil {
             destinationToken
         );
     }
+
+    /**
+     * @notice Method to withdraw USDC Fees. Only a contract admin can call this method
+     * @param amount Amount of destination token to be sent to recipient
+     */
+    function withdraw(
+        uint256 amount
+    ) public onlyAdmin {
+        TransferHelper.safeTransfer(address(usdcToken), msg.sender, amount);
+    }
 }
