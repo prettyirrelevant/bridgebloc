@@ -1,0 +1,254 @@
+.qr-image {
+  &__container {
+    gap: 14px;
+    width: 100%;
+    display: flex;
+    font-size: 14px;
+    color: var(--black);
+    flex-direction: column;
+    padding: 14px 20px 24px;
+    p {
+      padding: 0px 8px;
+    }
+  }
+
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 10px;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.offers-modal {
+  gap: 14px;
+  display: flex;
+  font-size: 14px;
+  font-weight: 500;
+  flex-direction: column;
+  padding: 20px 24px 24px;
+
+  .item-block {
+    gap: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  .amount-input {
+    width: 100%;
+    font-weight: 500;
+    padding: 12px 16px;
+    border: $border-100;
+    border-radius: 10px;
+    color: var(--black);
+  }
+
+  .title {
+    margin-bottom: 4px;
+    color: var(--black);
+    letter-spacing: 0.15px;
+  }
+
+  .calendar-container {
+    width: 100%;
+    display: flex;
+    margin-top: 6px;
+    position: relative;
+    flex-direction: column;
+
+    &.open {
+      margin-top: 100px;
+    }
+
+    .sub {
+      font-size: 12px;
+      margin-bottom: 12px;
+      letter-spacing: 0.2px;
+    }
+
+    .date-configs {
+      @extend %row-center;
+      gap: 50px;
+
+      .option-select {
+        @extend %row-center;
+        gap: 6px;
+        height: 28px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: var(--black);
+        letter-spacing: 0.4px;
+        background-color: var(--neutral-150);
+        p {
+          font-weight: 500;
+        }
+
+        &.time-option {
+          gap: 0px;
+          width: 48px;
+          padding: 6px 6px;
+          justify-content: center;
+          input {
+            flex: 1;
+            padding: 4px 0px;
+            border-radius: 4px;
+            text-align: center;
+            letter-spacing: 1px;
+          }
+        }
+      }
+
+      .time-inputs {
+        @extend %row-center;
+        gap: 10px;
+        input {
+          font-weight: 500;
+          color: var(--black);
+        }
+      }
+    }
+  }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px 10px !important;
+    border-radius: 12px !important;
+  }
+}
+
+.app-modal {
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  // padding: 34px;
+  overflow: auto;
+  position: fixed;
+  max-width: 448px;
+  padding-top: 0px;
+  z-index: z("modal");
+  flex-direction: column;
+  background: var(--white);
+  box-shadow: 0px 6px 32px rgba(0, 0, 0, 0.2);
+
+  &.sm {
+    max-width: 380px;
+  }
+
+  &.filters-modal {
+    top: 50%;
+    left: 50%;
+    height: 80vh;
+    width: 430px;
+    max-width: 100%;
+    font-size: 16px;
+    max-height: 85%;
+    overflow: visible;
+    border-radius: 18px;
+    padding: 0px 0px 18px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba($color: var(--black), $alpha: 0.35);
+
+    @include phone {
+      top: auto;
+      bottom: 0px;
+      width: 100%;
+      height: 100%;
+      padding: 0px 0px 12px;
+      margin-top: 0px !important;
+      padding-top: 0px !important;
+      transform: translate(-50%, 0%);
+      border-radius: 18px 18px 0px 0px;
+    }
+  }
+
+  &-overlay {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index: z("overlay");
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  .action-btns {
+    z-index: 6;
+    padding: 6px 22px 0px;
+    background: var(--white);
+    .flex-button {
+      @extend %row-middle;
+      width: 100%;
+      font-size: 16px;
+      font-weight: 500;
+      padding: 13px 16px;
+      border-radius: 10px;
+      color: var(--white);
+      background: var(--black);
+    }
+  }
+
+  &__header {
+    top: 0px;
+    display: flex;
+    position: sticky;
+    font-weight: 500;
+    overflow: hidden;
+    margin-bottom: 4px;
+    color: var(--black);
+    padding: 14px 22px 12px;
+    @extend %row-spaced-center;
+    text-transform: capitalize;
+    background: var(--neutral-150);
+    border-radius: 18px 18px 0px 0px;
+
+    @include phone {
+      padding: 14px 22px 11px;
+    }
+
+    .app-logo {
+      @extend %row-middle;
+      svg {
+        height: 26px;
+        width: max-content;
+      }
+    }
+    h2 {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 0.6px;
+      @include phone {
+        font-size: 18px;
+      }
+    }
+    button {
+      width: 30px;
+      height: 30px;
+      border-radius: 100%;
+      @extend %row-middle;
+      // border: 1px solid rgba(0, 0, 0, $alpha: 0.1);
+    }
+  }
+
+  &-centered {
+    top: 50%;
+    left: 50%;
+    width: 430px;
+    max-width: 90vw;
+    font-size: 16px;
+    // padding: 26px 24px;
+    height: max-content;
+    border-radius: 12px;
+    letter-spacing: -0.4px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba($color: var(--black), $alpha: 0.15);
+    @include phone {
+      padding: 24px 22px;
+    }
+  }
+}

@@ -1,0 +1,93 @@
+header {
+  @extend %row-middle;
+
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  position: fixed;
+  z-index: z("nav");
+  height: $headerHeight;
+  background: var(--white);
+  border-bottom: $border-200;
+
+  a,
+  div,
+  button {
+    display: flex;
+  }
+
+  .header-content {
+    @extend %row-spaced-center;
+    width: 100%;
+    padding: 12px 5vw;
+    max-width: $maxWidth;
+
+    &__logo {
+      @extend %row-center;
+      gap: 6px;
+      margin-right: 50px;
+    }
+
+    &__buttons {
+      @extend %row-center;
+      gap: 12px;
+
+      .account-details {
+        @extend %row-center;
+        margin-left: 8px;
+        gap: 10px;
+        &__image {
+          width: 36px;
+          aspect-ratio: 1;
+          overflow: hidden;
+          border-radius: 8px;
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+        &__info {
+          gap: 3px;
+          font-size: 15px;
+          flex-direction: column;
+          p {
+            line-height: 100%;
+          }
+          .ens {
+            font-size: 13px;
+            color: var(--neutral-500);
+          }
+        }
+      }
+
+      .wallet-connect-btn {
+        @extend %body-14;
+        @extend %row-middle;
+        padding: 12px 20px;
+        border-radius: 40px;
+        color: var(--black);
+        background: var(--neutral-300);
+      }
+
+      .menu-button {
+        @extend %row-middle;
+        height: 38px;
+        aspect-ratio: 1;
+        font-size: 11px;
+        min-width: 38px;
+        border-radius: 10px;
+        border: $border-100;
+        color: var(--neutral-800);
+        background-color: var(--neutral-100);
+
+        &.auto {
+          gap: 7px;
+          font-size: 15px;
+          padding: 0px 14px;
+          aspect-ratio: unset;
+        }
+      }
+    }
+  }
+}

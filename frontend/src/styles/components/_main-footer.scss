@@ -1,0 +1,168 @@
+footer {
+  @extend %column-center;
+  width: 100%;
+  border-top: $border-200;
+  margin-top: clamp(60px, 5vw, 96px);
+  a,
+  div,
+  button {
+    display: flex;
+  }
+
+  .footer-inner {
+    @extend %column-center;
+    width: 100%;
+    border-bottom: $border-200;
+
+    .content {
+      display: flex;
+      max-width: 95vw;
+      flex-direction: row;
+      width: calc($maxWidth - 20px);
+
+      @include laptop {
+        flex-direction: column;
+        .footer-block {
+          &:first-child {
+            align-items: center;
+            border-right: $border-200;
+          }
+        }
+      }
+
+      .footer-block {
+        flex: 1;
+        flex-direction: column;
+        padding: 0px calc(min(30px, 4vw));
+        padding-bottom: clamp(40px, 5vw, 96px);
+
+        &-header {
+          width: 100%;
+          max-width: 420px;
+          padding-top: clamp(40px, 5vw, 96px);
+          padding-bottom: clamp(50px, 6vw, 105px);
+          .inner {
+            min-height: 24px;
+          }
+        }
+        &:first-child {
+          border-right: $border-200;
+          @include laptop {
+            border-right: none !important;
+          }
+        }
+        &:last-child {
+          align-items: center;
+          @include laptop {
+            padding-top: 20px !important;
+            .footer-block-header {
+              height: 0px;
+              padding: 0px !important;
+            }
+          }
+        }
+
+        .mailing {
+          width: 100%;
+          max-width: 420px;
+          flex-direction: column;
+          h3 {
+            @extend %body-32;
+            font-weight: 400;
+            line-height: 1.2;
+            max-width: 380px;
+            color: var(--black);
+            margin-bottom: clamp(40px, 6vw, 96px);
+          }
+
+          &-input {
+            gap: 10px;
+            padding: 6px;
+            padding-left: 10px;
+            border-radius: 10px;
+            border: $border-200;
+            input {
+              @extend %body-16;
+              flex: 1;
+              @include placeholder {
+                color: var(--neutral-500);
+              }
+            }
+            button {
+              @extend %body-16;
+              @extend %row-middle;
+              padding: 12px 20px;
+              border-radius: 7px;
+              color: var(--white);
+              background: var(--black);
+            }
+          }
+        }
+
+        .socials {
+          @extend %row-center;
+          gap: 20px;
+          width: 100%;
+          max-width: 420px;
+          padding-top: clamp(50px, 7vw, 105px);
+          a {
+            @extend %row-middle;
+            width: 40px;
+            height: 40px;
+            color: var(--white);
+            border-radius: 30px;
+            background: var(--black-grey-2);
+          }
+        }
+
+        .external-links {
+          width: 420px;
+          max-width: 100%;
+          flex-direction: row;
+          justify-content: space-between;
+          .links {
+            flex-direction: column;
+            .header {
+              @extend %body-20;
+              font-weight: 500;
+              line-height: 1.2;
+              color: var(--black);
+              margin-bottom: 20px;
+            }
+            ul {
+              display: flex;
+              flex-direction: column;
+              li {
+                a {
+                  @extend %body-16;
+                  padding: 8px 0px;
+                  color: var(--neutral-700);
+                  &:hover {
+                    color: var(--black);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .footer-bottom {
+    @extend %row-middle;
+    width: 100%;
+    padding: clamp(30px, 4vw, 76px) 0px;
+    &__content {
+      @extend %row-spaced-center;
+      @extend %body-16;
+      max-width: 95vw;
+      width: $maxWidth;
+      color: var(--black);
+      padding: 0px calc(min(30px, 4vw));
+      a {
+        text-decoration: underline;
+      }
+    }
+  }
+}

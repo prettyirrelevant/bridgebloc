@@ -1,0 +1,73 @@
+%body-36 {
+  font-size: calc(max(3.6rem, 27px));
+}
+
+%body-32 {
+  font-size: 32px;
+  @include phone {
+    font-size: 24px;
+  }
+}
+
+%body-20 {
+  font-size: 20px;
+  @include phone {
+    font-size: 18px;
+  }
+}
+
+%body-18 {
+  font-size: 18px;
+  @include phone {
+    font-size: 16px;
+  }
+}
+
+%body-16 {
+  font-size: 16px;
+  @include phone {
+    font-size: 14px;
+  }
+}
+
+%body-14 {
+  font-size: 14px;
+  @include phone {
+    font-size: 13px;
+  }
+}
+
+%body-13 {
+  font-size: 13px;
+  @include phone {
+    font-size: 11px;
+  }
+}
+
+%body-12 {
+  font-size: 12px;
+  @include phone {
+    font-size: 10px;
+  }
+}
+
+%body-10 {
+  font-size: 10px;
+}
+
+.heading-1 {
+  font-weight: 500;
+  line-height: 100%;
+  white-space: nowrap;
+  color: var(--black-grey);
+  font-size: clamp(44px, -6.5915492958px + 9.7183098592vw, 180px);
+}
+
+.heading-desc {
+  color: var(--neutral-700);
+  font-size: clamp(18px, 15.8873239437px + 0.4225352113vw, 24px);
+
+  @include phone {
+    padding: 0px 10px;
+  }
+}

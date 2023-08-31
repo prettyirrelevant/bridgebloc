@@ -1,0 +1,52 @@
+html {
+  font-size: calc((100vw / 1440) * 10);
+  @include media(">desktop") {
+    font-size: 10px;
+  }
+}
+
+html,
+body {
+  margin: 0px;
+  padding: 0px;
+  width: 100vw;
+  height: 100vh;
+  font-weight: 500;
+}
+
+body {
+  font-size: 16px;
+  line-height: 1.36;
+  letter-spacing: 0.45px;
+  color: var(--black);
+  background: var(--white);
+}
+
+* {
+  // font-family: $sans;
+  font-family: $sansmed;
+}
+
+input {
+  background: transparent;
+  &:active,
+  &:focus {
+    outline: none;
+    border: none;
+    background: transparent;
+  }
+}
+ul,
+li {
+  display: flex;
+}
+
+.app-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  padding-top: 64px;
+  position: relative;
+  align-items: center;
+  flex-direction: column;
+}

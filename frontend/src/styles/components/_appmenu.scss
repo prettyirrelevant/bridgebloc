@@ -1,0 +1,102 @@
+.option-button {
+  @extend %row-spaced-center;
+  @extend %body-14;
+
+  gap: 20px;
+  height: 44px;
+  font-weight: 500;
+  min-width: 200px;
+  padding: 0px 14px;
+  border: $border-200;
+  border-radius: 10px;
+  color: var(--black);
+
+  &.sm {
+    @extend %row-middle;
+    min-width: 44px;
+    padding: 0px 16px;
+    border-radius: 8px;
+  }
+}
+
+.app-menu {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+
+  &__items {
+    width: 100%;
+    display: flex;
+    min-width: max-content;
+    flex-direction: column;
+    padding: 8px !important;
+    max-width: 100% !important;
+    border-radius: 10px !important;
+    background-color: var(--neutral-150) !important;
+    box-shadow: 0px 6px 32px rgba(0, 0, 0, 0.2);
+
+    max-height: 300px;
+    overflow: hidden scroll;
+    min-width: 320px !important;
+
+    &.sm {
+      padding: 2px !important;
+    }
+
+    &.hide {
+      display: none !important;
+    }
+  }
+  &__container {
+    width: auto;
+    &:has([data-full="true"]) {
+      width: 100% !important;
+    }
+  }
+  .menu-item {
+    gap: 12px;
+    display: flex;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 8px;
+    text-align: center;
+    @extend %row-middle;
+    color: var(--neutral-700);
+    text-transform: capitalize;
+
+    &[data-spaced="true"] {
+      @extend %row-spaced-center;
+      gap: 20px;
+      // min-width: 310px;
+    }
+    .option-details {
+      @extend %row-center;
+      gap: 12px;
+      color: var(--black);
+      p {
+        color: var(--black);
+      }
+    }
+    .checkmark {
+      color: var(--black);
+    }
+
+    &.sm {
+      padding: 9px 16px;
+    }
+
+    &:hover {
+      background-color: var(--neutral-200);
+    }
+    &[data-active="true"] {
+      color: var(--black);
+    }
+
+    img {
+      width: 28px;
+      height: 28px;
+      border-radius: 40px;
+    }
+  }
+}

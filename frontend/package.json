@@ -1,12 +1,39 @@
 {
-  "name": "@bridgebloc/frontend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "bridgebloc",
+  "version": "0.0.1",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT"
+  "dependencies": {
+    "@phosphor-icons/react": "^2.0.10",
+    "@szhsin/react-menu": "^4.0.3",
+    "@tanstack/react-query": "^4.33.0",
+    "axios": "^1.5.0",
+    "buffer": "^6.0.3",
+    "dayjs": "^1.11.9",
+    "javascript-time-ago": "^2.5.9",
+    "lucide-react": "^0.271.0",
+    "millify": "^6.1.0",
+    "process": "^0.11.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.15.0",
+    "react-spinners": "^0.13.8",
+    "react-time-ago": "^7.2.1",
+    "react-use": "^17.4.0",
+    "sass": "^1.66.1",
+    "util": "^0.12.4",
+    "viem": "~0.3.36",
+    "wagmi": "^1.0.6"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.3",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.5"
+  }
 }

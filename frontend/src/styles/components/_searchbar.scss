@@ -1,0 +1,42 @@
+.search-bar {
+  @extend %row-center;
+  flex: 1;
+  gap: 10px;
+  height: 40px;
+  max-width: 480px;
+  overflow: hidden;
+  padding: 4px 13px;
+  padding-left: 12px;
+  border-radius: 10px;
+  border: $border-200;
+
+  input {
+    flex: 1;
+    height: 28px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: var(--black);
+    &:active,
+    &:focus {
+      outline: none;
+      border: none;
+    }
+  }
+  &__shortcut {
+    @extend %row-middle;
+    height: 22px;
+    padding: 0px 8px;
+    font-size: 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    color: var(--neutral-800);
+    background-color: var(--neutral-300);
+  }
+  &__icon {
+    color: var(--neutral-600);
+    aspect-ratio: 1;
+    border-radius: 28px;
+    @extend %row-middle;
+  }
+}
