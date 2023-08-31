@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { Contract } from "ethers";
-import { ethers } from "hardhat";
+import hre, { ethers } from "hardhat";
 import IAvaxSwapRouter from "../artifacts/contracts/cctp/interfaces/IAvaxSwapRouter.sol/IAvaxSwapRouter.json";
 import IWETH from "../artifacts/contracts/LxLy/interfaces/WETH.sol/IWETH.json";
 import IERC20Metadata from "@openzeppelin/contracts/build/contracts/IERC20Metadata.json";
@@ -206,5 +206,45 @@ describe("CCTP Bridge AVAX Mainnet Fork Tests", function () {
         await expect(depositTxn).to.emit(daiContract, 'Transfer').withArgs(newSigner.address, bridgeAddress, depositAmount);
         await expect(depositTxn).to.emit(usdcContract, 'Approval').withArgs(bridgeAddress, caseInsensitiveTokenMessenger, anyValue);
         await expect(depositTxn).to.emit(tokenMessengerContract, 'DepositForBurn').withArgs(anyValue, USDC_ADDRESS, anyValue, bridgeAddress, destinationContractBytes32, destinationDomain, anyValue, isZeroAddress);
-    })
+    });
+
+    it("Test USDC Withdrawal", async () => {
+        const [ admin, newSigner ] = await ethers.getSigners();
+        const swapRouter = new ethers.Contract(UNISWAP_ROUTER, IAvaxSwapRouter.abi, newSigner);
+        const usdcContract = new ethers.Contract(USDC_ADDRESS, IERC20Metadata.abi, newSigner);
+        const usdcDecimal = await usdcContract.decimals();
+        const wrappedAvax = new ethers.Contract(WRAPPED_AVAX, IWETH.abi, newSigner);
+        const cctpAddress = await cctpBridge.getAddress();
+
+        // Step1: Get Wrapped Avax by depositing Native Avax
+        await wrappedAvax.deposit({value: ethers.parseEther("90")})
+
+        // Step1: Approve and Swap Wrapped AVAX For USDC Using UNISWAPROUTER
+        const swapAmount = "50";
+        let swapParam = {
+            tokenIn: WRAPPED_AVAX,
+            tokenOut: USDC_ADDRESS,
+            fee: 3000,
+            recipient: cctpAddress,
+            amountIn: ethers.parseEther(swapAmount),
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        };
+        await wrappedAvax.approve(UNISWAP_ROUTER, ethers.parseEther(swapAmount));
+        await swapRouter.exactInputSingle(swapParam);
+
+        
+        // Step2: Call the Withdrawal [Admin]
+        const cctpInitialBalance = await usdcContract.balanceOf(cctpAddress);
+        const withdrawalAmount = ethers.parseUnits("10", usdcDecimal);
+        const depositTxn = await cctpBridge.connect(admin).withdraw(withdrawalAmount);
+        await depositTxn.wait()
+        const cctpFinalBalance = await usdcContract.balanceOf(cctpAddress);
+        
+        // Step3: Assertions
+        expect(parseInt(cctpFinalBalance.toString())).to.equal(parseInt(cctpInitialBalance.toString()) - parseInt(withdrawalAmount.toString()));
+
+        // Step 4: Call the Withdrawal [Not Admin]
+        await expect(cctpBridge.connect(newSigner).withdraw(withdrawalAmount)).to.be.revertedWith("Not Permitted");
+    });
 })

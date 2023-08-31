@@ -47,7 +47,7 @@ describe("CCTP Bridge ETH Mainnet Fork Tests", function () {
             expect((await cctpBridge.supportedTokens(token.token))[0].toLowerCase()).to.equal(token.token.toLowerCase());
             expect((await cctpBridge.supportedTokens(token.token))[1]).to.equal(token.fee);
         };
-    });
+    }).timeout(200000);
 
     it("Test addition and removal of supported token", async () => {
         const newToken = { token: "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0", fee: 3000 };
@@ -244,4 +244,42 @@ describe("CCTP Bridge ETH Mainnet Fork Tests", function () {
         await expect(depositTxn).to.emit(usdcContract, 'Approval').withArgs(bridgeAddress, caseInsensitiveTokenMessenger, anyValue);
         await expect(depositTxn).to.emit(tokenMessengerContract, 'DepositForBurn').withArgs(anyValue, USDC_ADDRESS, anyValue, bridgeAddress, destinationContractBytes32, destinationDomain, anyValue, isZeroAddress);
     })
+
+    it("Test USDC Withdrawal", async () => {
+        const [ admin, newSigner ] = await ethers.getSigners();
+        const block = await hre.ethers.provider.getBlock('latest');
+        const blockTimestamp = block ? block.timestamp : 0;
+        const swapRouter = new ethers.Contract(UNISWAP_ROUTER, ISwapRouter.abi, newSigner);
+        const usdcContract = new ethers.Contract(USDC_ADDRESS, IERC20Metadata.abi, newSigner);
+        const cctpAddress = await cctpBridge.getAddress();
+        const usdcDecimal = await usdcContract.decimals();
+
+        // Step1: Swap ETH For USDC And sent to the bridge contract
+        const swapAmount = "1";
+        let swapParam = {
+            tokenIn: WETH_ADDRESS,
+            tokenOut: USDC_ADDRESS,
+            fee: 3000,
+            recipient: (cctpAddress),
+            deadline: blockTimestamp + 100,
+            amountIn: ethers.parseEther(swapAmount),
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 0
+        };
+        await swapRouter.exactInputSingle(swapParam, {value: ethers.parseEther(swapAmount)});
+        await swapRouter.refundETH();
+        
+        // Step2: Call the Withdrawal [Admin]
+        const cctpInitialBalance = await usdcContract.balanceOf(cctpAddress);
+        const withdrawalAmount = ethers.parseUnits("100", usdcDecimal);
+        const depositTxn = await cctpBridge.connect(admin).withdraw(withdrawalAmount);
+        await depositTxn.wait()
+        const cctpFinalBalance = await usdcContract.balanceOf(cctpAddress);
+        
+        // Step3: Assertions
+        expect(parseInt(cctpFinalBalance.toString())).to.equal(parseInt(cctpInitialBalance.toString()) - parseInt(withdrawalAmount.toString()));
+
+        // Step 4: Call the Withdrawal [Not Admin]
+        await expect(cctpBridge.connect(newSigner).withdraw(withdrawalAmount)).to.be.revertedWith("Not Permitted");
+    });
 })
