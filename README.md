@@ -102,6 +102,25 @@ For in-depth API documentation, please refer to the following link:
 - [Swagger Doc](https://bridgebloc-api-eb9bd3c3ed18.herokuapp.com/api/docs)
 
 
+## 🤖 Smart Contracts
+
+### Circle [CCTP](https://developers.circle.com/stablecoin/docs/cctp-getting-started)
+Our circle smart contracts integrates the circle CCTP smart contracts to allow bridging USDC accross
+Ethereum, Arbitrum and Avalanche.
+- Ethereum Mainnet [Coming soon...]
+- Arbitrum Mainnet [0x8e326D9F79a9D944C920fC7aE899Dd181ecB0491](https://arbiscan.io/address/0x8e326D9F79a9D944C920fC7aE899Dd181ecB0491)
+- Avalanche Mainnet [0x8e326D9F79a9D944C920fC7aE899Dd181ecB0491](https://snowtrace.io/address/0x8e326d9f79a9d944c920fc7ae899dd181ecb0491)
+- Ethereum Goerli [0x354116A3BEFD3C2B9E98BC35127daCf735471AD8](https://goerli.etherscan.io/address/0x354116A3BEFD3C2B9E98BC35127daCf735471AD8)
+- Arbitrum Goerli [0x354116A3BEFD3C2B9E98BC35127daCf735471AD8](https://goerli.arbiscan.io/address/0x354116A3BEFD3C2B9E98BC35127daCf735471AD8)
+- Avalanche Fuji [0x7c1ba3e858e45fd789c86ec687b90d0f932679d0](https://testnet.snowtrace.io/address/0x7c1ba3e858e45fd789c86ec687b90d0f932679d0)
+
+
+### Polygon LXLY(Rollup Bridge)
+Allows bridging assets from ethereum to polygon zkevm and vice-versa. It uses the polygon LXLY Bridge.
+- Ethereum Mainnet [Coming soon...]
+- Polygon ZKEVM [Coming soon...]
+- Ethereum Goerli [0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b](https://goerli.etherscan.io/address/0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b)
+- Polygon ZKEVM Testnet [0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b](https://testnet-zkevm.polygonscan.com/address/0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b)
 ## 👍 Contributing
 <sup>[(Back to top)](#------------------------)</sup>
 
