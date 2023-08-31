@@ -66,7 +66,15 @@ export const deploymentVariables = {
                 {token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", fee: 3000}, // USDC
                 {token: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", fee: 3000}, // WETH
                 {token: "0x6B175474E89094C44Da98b954EedeAC495271d0F", fee: 3000}, // DAI
-                {token: "0xdAC17F958D2ee523a2206206994597C13D831ec7", fee: 3000} // USDT
+                {token: "0xdAC17F958D2ee523a2206206994597C13D831ec7", fee: 3000}, // USDT
+                {token: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", fee: 3000}, // ARB USDC
+                {token: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", fee: 3000}, // ARB WETH
+                {token: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", fee: 100}, // ARB DAI
+                {token: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", fee: 3000}, // ARB USDT
+                {token: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", fee: 3000}, // AVAX USDC
+                {token: "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70", fee: 3000}, // AVAX DAI,
+                {token: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", fee: 100}, // AVAX USDT,
+                {token: "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB", fee: 500}, // AVAX WETH
             ]
         },
         arbitrum: {
@@ -82,7 +90,15 @@ export const deploymentVariables = {
                 {token: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", fee: 3000}, // USDC
                 {token: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", fee: 3000}, // WETH
                 {token: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", fee: 100}, // DAI
-                {token: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", fee: 3000} // USDT
+                {token: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", fee: 3000}, // USDT
+                {token: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", fee: 3000}, // AVAX USDC
+                {token: "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70", fee: 3000}, // AVAX DAI,
+                {token: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", fee: 100}, // AVAX USDT,
+                {token: "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB", fee: 500}, // AVAX WETH
+                {token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", fee: 3000}, // ETH USDC
+                {token: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", fee: 3000}, // ETH WETH
+                {token: "0x6B175474E89094C44Da98b954EedeAC495271d0F", fee: 3000}, // ETH DAI
+                {token: "0xdAC17F958D2ee523a2206206994597C13D831ec7", fee: 3000} // ETH USDT
             ]
         },
         avalanche: {
@@ -98,7 +114,15 @@ export const deploymentVariables = {
                 {token: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", fee: 3000}, // USDC
                 {token: "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70", fee: 3000}, // DAI,
                 {token: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", fee: 100}, // USDT,
-                {token: "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB", fee: 500} // WETH
+                {token: "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB", fee: 500}, // WETH
+                {token: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", fee: 3000}, // ARB USDC
+                {token: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", fee: 3000}, // ARB WETH
+                {token: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", fee: 100}, // ARB DAI
+                {token: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", fee: 3000}, // ARB USDT
+                {token: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", fee: 3000}, // ETH USDC
+                {token: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", fee: 3000}, // ETH WETH
+                {token: "0x6B175474E89094C44Da98b954EedeAC495271d0F", fee: 3000}, // ETH DAI
+                {token: "0xdAC17F958D2ee523a2206206994597C13D831ec7", fee: 3000} // ETH USDT
             ]
         }
     }

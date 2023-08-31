@@ -17,6 +17,6 @@ async function deploy() {
     );
     await cctpBridge.waitForDeployment();
 
-    console.log(`CCTP Bridge Deployed At ${cctpBridge.target}`)
+    console.log(`CCTP Bridge Deployed At ${cctpBridge.target} For ${network}`)
 }
 deploy().catch((error) => console.log(error));

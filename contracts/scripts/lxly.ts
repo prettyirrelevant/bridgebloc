@@ -22,4 +22,4 @@ async function deploy(network: Network, chain: Chain) {
 }
 
 // deploy("testnet", "zkEVM").catch((error) => console.log(error));
-// deploy("testnet", "eth").catch((error) => console.log(error));
+// deploy("mainnet", "eth").catch((error) => console.log(error));
