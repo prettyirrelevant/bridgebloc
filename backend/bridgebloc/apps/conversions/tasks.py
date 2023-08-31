@@ -301,7 +301,7 @@ def get_lxly_merkle_proofs() -> None:
             merkle_proof_client = get_merkle_proof_client(step.conversion.source_chain)
             result = merkle_proof_client.get_merkle_proof(
                 deposit_count=step.metadata['deposit_count'],
-                origin_id=step.conversion.destination_chain.to_lxly_domain(),
+                origin_id=step.conversion.source_chain.to_lxly_domain(),
             )
             step.status = TokenConversionStepStatus.SUCCESSFUL
             step.save()
