@@ -311,8 +311,6 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
 
         # if self.context['request'].user.address != to_checksum_address(polygon_zkevm_bridge_event['from']):
         #     raise serializers.ValidationError(
-        #         f'{polygon_zkevm_bridge_event["from"]} does not match the authenticated user',
-        #     )
 
         try:
             source_token = Token.objects.get(

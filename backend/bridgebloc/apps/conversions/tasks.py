@@ -9,6 +9,7 @@ from huey.contrib.djhuey import db_periodic_task, lock_task
 from web3.types import TxParams
 
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 
 from bridgebloc.apps.tokens.models import Token
@@ -49,24 +50,25 @@ def poll_circle_for_deposit_addresses() -> None:
     for step in steps_needing_deposit_addresses:
         logger.info(f'Polling for deposit address for Token Conversion: {step.conversion.uuid}')
 
-        circle_client = get_circle_api_client(step.conversion.source_chain)
         try:
-            response = circle_client.get_payment_intent(step.metadata['id'])
-            if response['data']['paymentMethods'][0].get('address') is None:
-                logger.info(f'No deposit address found for Token Conversion: {step.conversion.uuid}. Skipping...')
-                continue
+            with transaction.atomic():
+                circle_client = get_circle_api_client(step.conversion.source_chain)
+                response = circle_client.get_payment_intent(step.metadata['id'])
+                if response['data']['paymentMethods'][0].get('address') is None:
+                    logger.info(f'No deposit address found for Token Conversion: {step.conversion.uuid}. Skipping...')
+                    continue
 
-            step.status = TokenConversionStepStatus.SUCCESSFUL
-            step.metadata = response['data']
-            step.save()
+                step.status = TokenConversionStepStatus.SUCCESSFUL
+                step.metadata = response['data']
+                step.save()
 
-            TokenConversionStep.objects.create(
-                metadata={'deposit_tx_hash': None, **response['data']},
-                conversion=step.conversion,
-                status=TokenConversionStepStatus.PENDING,
-                step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT,
-            )
-            logger.info(f'Received deposit address for Token Conversion: {step.conversion.uuid}')
+                TokenConversionStep.objects.create(
+                    metadata={'deposit_tx_hash': None, **response['data']},
+                    conversion=step.conversion,
+                    status=TokenConversionStepStatus.PENDING,
+                    step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT,
+                )
+                logger.info(f'Received deposit address for Token Conversion: {step.conversion.uuid}')
         except Exception:
             logger.exception('Error occurred while polling Circle API for deposit address')
             continue
@@ -91,38 +93,39 @@ def check_for_circle_api_deposit_confirmation() -> None:
         logger.info(f'Checking deposit confirmation for step {step.uuid}...')
 
         try:
-            circle_client = get_circle_api_client(step.conversion.source_chain)
-            response = circle_client.get_payment_intent(step.metadata['id'])
+            with transaction.atomic():
+                circle_client = get_circle_api_client(step.conversion.source_chain)
+                response = circle_client.get_payment_intent(step.metadata['id'])
 
-            if timezone.now() > datetime.fromisoformat(response['data']['expiresOn']):
+                if timezone.now() > datetime.fromisoformat(response['data']['expiresOn']):
+                    step.metadata = {'deposit_tx_hash': step.metadata['deposit_tx_hash'], **response['data']}
+                    step.status = TokenConversionStepStatus.FAILED
+                    step.save()
+
+                    logger.warning(f'Step {step.uuid} failed due to expiration of payment intent.')
+                    continue
+
+                if (
+                    response['data']['timeline'][0]['status'] != 'complete'
+                    or response['data']['timeline'][0]['context'] not in ('paid', 'overpaid')
+                    or len(response['data']['paymentIds']) < 1
+                    or Decimal(response['data']['amountPaid']['amount']) < step.conversion.amount
+                ):
+                    logger.info(f'Deposit confirmation for step {step.uuid} is not complete or accurate. Skipping...')
+                    continue
+
+                step.status = TokenConversionStepStatus.SUCCESSFUL
                 step.metadata = {'deposit_tx_hash': step.metadata['deposit_tx_hash'], **response['data']}
-                step.status = TokenConversionStepStatus.FAILED
                 step.save()
 
-                logger.warning(f'Step {step.uuid} failed due to expiration of payment intent.')
-                continue
+                logger.info(f'Deposit confirmation for step {step.uuid} succeeded. Proceeding to next step...')
 
-            if (
-                response['data']['timeline'][0]['status'] != 'complete'
-                or response['data']['timeline'][0]['context'] not in ('paid', 'overpaid')
-                or len(response['data']['paymentIds']) < 1
-                or Decimal(response['data']['amountPaid']['amount']) < step.conversion.amount
-            ):
-                logger.info(f'Deposit confirmation for step {step.uuid} is not complete or accurate. Skipping...')
-                continue
-
-            step.status = TokenConversionStepStatus.SUCCESSFUL
-            step.metadata = {'deposit_tx_hash': step.metadata['deposit_tx_hash'], **response['data']}
-            step.save()
-
-            logger.info(f'Deposit confirmation for step {step.uuid} succeeded. Proceeding to next step...')
-
-            TokenConversionStep.objects.create(
-                metadata={},
-                conversion=step.conversion,
-                status=TokenConversionStepStatus.PENDING,
-                step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
-            )
+                TokenConversionStep.objects.create(
+                    metadata={},
+                    conversion=step.conversion,
+                    status=TokenConversionStepStatus.PENDING,
+                    step_type=CircleAPIConversionStepType.SEND_TO_RECIPIENT,
+                )
         except Exception:
             logger.exception('Error occurred while checking for Circle API deposit confirmation')
             continue
@@ -148,17 +151,18 @@ def send_to_recipient_using_circle_api() -> None:
         logger.info(f'Processing step {step.uuid} for withdrawal to recipient...')
 
         try:
-            circle_client = get_circle_api_client(step.conversion.destination_chain)
-            response = circle_client.make_withdrawal(
-                amount=step.conversion.actual_amount,
-                master_wallet_id=settings.CIRCLE_MASTER_WALLET_ID,
-                chain=step.conversion.destination_chain.to_circle(),
-                destination_address=step.conversion.destination_address,
-            )
-            step.metadata = response['data']
-            step.save()
+            with transaction.atomic():
+                circle_client = get_circle_api_client(step.conversion.destination_chain)
+                response = circle_client.make_withdrawal(
+                    amount=step.conversion.actual_amount,
+                    master_wallet_id=settings.CIRCLE_MASTER_WALLET_ID,
+                    chain=step.conversion.destination_chain.to_circle(),
+                    destination_address=step.conversion.destination_address,
+                )
+                step.metadata = response['data']
+                step.save()
 
-            logger.info(f'Withdrawal initiated for step {step.uuid}.')
+                logger.info(f'Withdrawal initiated for step {step.uuid}.')
         except Exception:
             logger.exception('Error occurred while checking for Circle API deposit confirmation')
             continue
@@ -184,24 +188,24 @@ def wait_for_minimum_confirmation_for_circle_api_withdrawals() -> None:
         logger.info(f'Checking withdrawal confirmation for step {step.uuid}...')
 
         try:
-            circle_client = get_circle_api_client(step.conversion.destination_chain)
-            response = circle_client.get_withdrawal_info(step.metadata['id'])
-            if (
-                response['data']['status'] in {'running', 'complete'}
-                and response['data']['transactionHash'] is not None
-            ):
-                step.metadata = response['data']
-                step.status = TokenConversionStepStatus.SUCCESSFUL
-                step.save()
+            with transaction.atomic():
+                circle_client = get_circle_api_client(step.conversion.destination_chain)
+                response = circle_client.get_withdrawal_info(step.metadata['id'])
+                if (
+                    response['data']['status'] in {'running', 'complete'}
+                    and response['data']['transactionHash'] is not None
+                ):
+                    step.metadata = response['data']
+                    step.status = TokenConversionStepStatus.SUCCESSFUL
+                    step.save()
 
-                logger.info(f'Withdrawal for step {step.uuid} confirmed and marked as successful.')
+                    logger.info(f'Withdrawal for step {step.uuid} confirmed and marked as successful.')
 
-            if response['data']['status'] == 'failed':
-                error_code = response['data']['errorCode']
-                step.metadata = response['data']
-                step.save()
-
-                logger.warning(f'Withdrawal for step {step.uuid} failed with error code {error_code}. Will retry...')
+                if response['data']['status'] == 'failed':
+                    error_code = response['data']['errorCode']
+                    step.metadata = response['data']
+                    step.save()
+                    logger.warning(f'Withdrawal for step {step.uuid} failed with error code {error_code}')
         except Exception:
             logger.exception('Error occurred while checking for Circle API deposit confirmation')
             continue
@@ -219,27 +223,28 @@ def check_for_cctp_attestation_confirmation() -> None:
     )
     for step in steps_waiting_for_attestation_confirmation:
         try:
-            attestation_client = get_attestation_client(step.conversion.source_chain)
-            result = attestation_client.get_attestation(step.metadata['message_hash'])
-            if result['status'] != 'complete':
-                logger.info(
-                    f'Attestation not found or still pending for hash: {step.metadata["message_hash"]}. Skipping...',
+            with transaction.atomic():
+                attestation_client = get_attestation_client(step.conversion.source_chain)
+                result = attestation_client.get_attestation(step.metadata['message_hash'])
+                if result['status'] != 'complete':
+                    logger.info(
+                        f'Attestation not found or still pending for hash: {step.metadata["message_hash"]}. Skipping...',  # noqa: E501
+                    )
+                    continue
+
+                step.status = TokenConversionStepStatus.SUCCESSFUL
+                step.save()
+
+                TokenConversionStep.objects.create(
+                    metadata={
+                        'nonce': step.metadata['nonce'],
+                        'attestation': result['attestation'],
+                        'message_bytes': step.metadata['message_bytes'],
+                    },
+                    conversion=step.conversion,
+                    status=TokenConversionStepStatus.PENDING,
+                    step_type=CCTPConversionStepType.SEND_TO_RECIPIENT,
                 )
-                continue
-
-            step.status = TokenConversionStepStatus.SUCCESSFUL
-            step.save()
-
-            TokenConversionStep.objects.create(
-                metadata={
-                    'nonce': step.metadata['nonce'],
-                    'attestation': result['attestation'],
-                    'message_bytes': step.metadata['message_bytes'],
-                },
-                conversion=step.conversion,
-                status=TokenConversionStepStatus.PENDING,
-                step_type=CCTPConversionStepType.SEND_TO_RECIPIENT,
-            )
         except Exception:
             logger.exception('An error occurred while retrieving attestation for CCTP bridging process')
             continue
@@ -257,32 +262,33 @@ def cctp_send_token_to_recipient() -> None:
     usdc_token = Token.objects.filter(symbol='usdc').first()
     for step in recipient_credit_steps:
         try:
-            evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
-            contract = evm_client.get_contract(
-                name='CrossChainBridge',
-                address=get_cross_chain_bridge_deployment_address(step.conversion.destination_chain),
-            )
-            deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
-            send_to_recipient_fn_call = contract.functions.sendToRecipient(
-                to_bytes(hexstr=step.metadata['message_bytes']),
-                to_bytes(hexstr=step.metadata['attestation']),
-                step.metadata['nonce'],
-                int(usdc_token.convert_from_token_to_wei(step.conversion.actual_amount)),  # type: ignore[union-attr]
-                step.conversion.destination_token.address,
-                step.conversion.destination_address,
-            )
-            unsigned_tx = send_to_recipient_fn_call.build_transaction(
-                TxParams(
-                    {
-                        'from': deployer.address,
-                        'chainId': step.conversion.destination_chain.value,
-                    },
-                ),
-            )
-            tx_hash = evm_client.publish_transaction(tx_params=unsigned_tx, sender=deployer)
-            step.status = TokenConversionStepStatus.SUCCESSFUL
-            step.metadata['tx_hash'] = tx_hash.hex()
-            step.save()
+            with transaction.atomic():
+                evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
+                contract = evm_client.get_contract(
+                    name='CrossChainBridge',
+                    address=get_cross_chain_bridge_deployment_address(step.conversion.destination_chain),
+                )
+                deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
+                send_to_recipient_fn_call = contract.functions.sendToRecipient(
+                    to_bytes(hexstr=step.metadata['message_bytes']),
+                    to_bytes(hexstr=step.metadata['attestation']),
+                    step.metadata['nonce'],
+                    int(usdc_token.convert_from_token_to_wei(step.conversion.actual_amount)),  # type: ignore[union-attr]  # noqa: E501
+                    step.conversion.destination_token.address,
+                    step.conversion.destination_address,
+                )
+                unsigned_tx = send_to_recipient_fn_call.build_transaction(
+                    TxParams(
+                        {
+                            'from': deployer.address,
+                            'chainId': step.conversion.destination_chain.value,
+                        },
+                    ),
+                )
+                tx_hash = evm_client.publish_transaction(tx_params=unsigned_tx, sender=deployer)
+                step.status = TokenConversionStepStatus.SUCCESSFUL
+                step.metadata['tx_hash'] = tx_hash.hex()
+                step.save()
         except Exception:
             logger.exception('An error occured while sending token to the recipient of a CCTP bridging process.')
             continue
@@ -298,30 +304,31 @@ def get_lxly_merkle_proofs() -> None:
     )
     for step in steps_requiring_merkle_proofs:
         try:
-            merkle_proof_client = get_merkle_proof_client(step.conversion.source_chain)
-            result = merkle_proof_client.get_merkle_proof(
-                deposit_count=step.metadata['deposit_count'],
-                origin_id=step.conversion.source_chain.to_lxly_domain(),
-            )
-            step.status = TokenConversionStepStatus.SUCCESSFUL
-            step.save()
+            with transaction.atomic():
+                merkle_proof_client = get_merkle_proof_client(step.conversion.source_chain)
+                result = merkle_proof_client.get_merkle_proof(
+                    deposit_count=step.metadata['deposit_count'],
+                    origin_id=step.conversion.source_chain.to_lxly_domain(),
+                )
+                step.status = TokenConversionStepStatus.SUCCESSFUL
+                step.save()
 
-            TokenConversionStep.objects.create(
-                metadata={
-                    'merkle_proof': result['proof']['merkle_proof'],
-                    'main_exit_root': result['proof']['main_exit_root'],
-                    'rollup_exit_root': result['proof']['rollup_exit_root'],
-                    'bridged_amount': step.metadata['bridged_amount'],
-                    'deposit_count': step.metadata['depositCount'],
-                    'origin_network': step.metadata['originNetwork'],
-                    'origin_address': step.metadata['originAddress'],
-                    'destination_network': step.metadata['destinationNetwork'],
-                    'destination_address': step.metadata['destinationAddress'],
-                },
-                conversion=step.conversion,
-                status=TokenConversionStepStatus.PENDING,
-                step_type=LxLyConversionStepType.SEND_TO_RECIPIENT,
-            )
+                TokenConversionStep.objects.create(
+                    metadata={
+                        'merkle_proof': result['proof']['merkle_proof'],
+                        'main_exit_root': result['proof']['main_exit_root'],
+                        'rollup_exit_root': result['proof']['rollup_exit_root'],
+                        'bridged_amount': step.metadata['bridged_amount'],
+                        'deposit_count': step.metadata['depositCount'],
+                        'origin_network': step.metadata['originNetwork'],
+                        'origin_address': step.metadata['originAddress'],
+                        'destination_network': step.metadata['destinationNetwork'],
+                        'destination_address': step.metadata['destinationAddress'],
+                    },
+                    conversion=step.conversion,
+                    status=TokenConversionStepStatus.PENDING,
+                    step_type=LxLyConversionStepType.SEND_TO_RECIPIENT,
+                )
         except Exception:
             logger.exception('An error occurred while retrieving merkle proof for LxLy bridging process')
             continue
@@ -337,36 +344,37 @@ def claim_assets_at_destination_lxly() -> None:
     )
     for step in claim_assets_steps:
         try:
-            evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
-            contract = evm_client.get_contract(
-                name='PolygonZkEVMBridge',
-                address=get_polygon_zkevm_bridge_deployment_address(step.conversion.destination_chain),
-            )
-            deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
-            send_to_recipient_fn__call = contract.functions.claimAsset(
-                [to_bytes(hexstr=i) for i in step.metadata['merkle_proof']],
-                step.metadata['deposit_count'],
-                to_bytes(hexstr=step.metadata['main_exit_root']),
-                to_bytes(hexstr=step.metadata['rollup_exit_root']),
-                step.metadata['origin_network'],
-                step.metadata['origin_address'],
-                step.metadata['destination_network'],
-                step.metadata['destination_address'],
-                step.metadata['bridged_amount'],  # fee is included during contract call
-                b'',  # I'm not entirely sure how to pass an empty byte to a contract call
-            )
-            unsigned_tx = send_to_recipient_fn__call.build_transaction(
-                TxParams(
-                    {
-                        'from': deployer.address,
-                        'chainId': step.conversion.destination_chain.value,
-                    },
-                ),
-            )
-            tx_hash = evm_client.publish_transaction(tx_params=unsigned_tx, sender=deployer)
-            step.status = TokenConversionStepStatus.SUCCESSFUL
-            step.metadata['tx_hash'] = tx_hash.hex()
-            step.save()
+            with transaction.atomic():
+                evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
+                contract = evm_client.get_contract(
+                    name='PolygonZkEVMBridge',
+                    address=get_polygon_zkevm_bridge_deployment_address(step.conversion.destination_chain),
+                )
+                deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
+                send_to_recipient_fn__call = contract.functions.claimAsset(
+                    [to_bytes(hexstr=i) for i in step.metadata['merkle_proof']],
+                    step.metadata['deposit_count'],
+                    to_bytes(hexstr=step.metadata['main_exit_root']),
+                    to_bytes(hexstr=step.metadata['rollup_exit_root']),
+                    step.metadata['origin_network'],
+                    step.metadata['origin_address'],
+                    step.metadata['destination_network'],
+                    step.metadata['destination_address'],
+                    step.metadata['bridged_amount'],  # fee is included during contract call
+                    b'',  # I'm not entirely sure how to pass an empty byte to a contract call
+                )
+                unsigned_tx = send_to_recipient_fn__call.build_transaction(
+                    TxParams(
+                        {
+                            'from': deployer.address,
+                            'chainId': step.conversion.destination_chain.value,
+                        },
+                    ),
+                )
+                tx_hash = evm_client.publish_transaction(tx_params=unsigned_tx, sender=deployer)
+                step.status = TokenConversionStepStatus.SUCCESSFUL
+                step.metadata['tx_hash'] = tx_hash.hex()
+                step.save()
         except Exception:
             logger.exception('An error occurred while sending bridged asset to recipient for LxLy')
             continue

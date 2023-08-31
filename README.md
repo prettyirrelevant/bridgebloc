@@ -53,7 +53,7 @@ ensuring smooth movement in both directions.
 
 #### Supported Chains and Tokens
 
-Here's an overview of the chains we currently support along with the tokens they accommodate:
+Here's an overview of the chains we currently support and the tokens they work with:
 
 - Ethereum: USDT, USDC, DAI, WETH
 - Ethereum Goerli: USDC
@@ -70,18 +70,62 @@ Here's an overview of the chains we currently support along with the tokens they
 
 We believe in cost-effective solutions. Our platform offers a reasonable fee structure:
 
-- Circle API: 4% fee (capped at $20) for all transactions
-- LxLy and CCTP: 3% fee for stablecoins (capped at $20)
+- Circle API: A 4% fee (capped at $20) for all transactions
+- LxLy and CCTP: A 3% fee for stablecoins (capped at $20)
 
 ### Upcoming Enhancements
 
 We're committed to continuous improvement. Here's what's in the pipeline:
 
-- **Multi-Routing:** Soon, you'll enjoy the freedom of movement across chains without restrictions.
-- **Expanded Token Support:** We're working to add more tokens to facilitate seamless transfers across different chains.
+- **Multi-Routing:** Soon, you'll have the flexibility to move across chains without limitations.
+- **Expanded Token Support:** We're aworking to add more tokens to facilitate seamless transfers across different chains.
 - **Fiat On & Off-Ramp:** We plan to introduce a feature that will allow you to easily convert between digital assets and fiat currency.
 
 Stay tuned for these exciting enhancements!
+
+### Important Information
+
+Please note that due to gas implications,
+we did not deploy contracts to interact with Polygon zkEVM Bridge & Circle's CCTP contracts on Ethereum mainnet.
+However, all contracts are available on testnet networks for all supported EVM chains.
+Please be aware that only USDC can be bridged, as the liquidity of other tokens cannot be determined,
+and discovering router addresses for DEXes on the testnet posed difficulties.
+
+
+## 🔄 Token Transfer Routes
+
+Our project provides convenient routes for transferring tokens across various EVM-compatible chains.
+These routes specify the paths for moving tokens between source and destination chains:
+
+#### Ethereum <-> Arbitrum
+
+- Mainnet: **Circle CCTP** (not available)
+- Testnet: **Circle CCTP**
+
+#### Ethereum <-> Avalanche
+
+- Mainnet: **Circle CCTP** (not available)
+- Testnet: **Circle CCTP**
+
+#### Ethereum <-> Polygon PoS
+
+- Mainnet: **Circle Payments & Transfers API** (not available)
+- Testnet: **Circle Payments & Transfers API**
+
+#### Ethereum <-> Polygon zkEVM
+
+- Mainnet: **Polygon LxLy Bridge** (not available)
+- Testnet: **Polygon LxLy Bridge**
+
+#### Polygon PoS <-> Ethereum
+
+- Mainnet: **Circle Payments & Transfers API** (not available)
+- Testnet: **Circle Payments & Transfers API**
+
+#### Avalanche <-> Arbitrum
+
+- Mainnet: **Circle CCTP**
+- Testnet: **Circle CCTP**
 
 
 ## 🌵 Folder Structure
@@ -103,24 +147,33 @@ For in-depth API documentation, please refer to the following link:
 
 
 ## 🤖 Smart Contracts
+<sup>[(Back to top)](#------------------------)</sup>
 
-### Circle [CCTP](https://developers.circle.com/stablecoin/docs/cctp-getting-started)
-Our circle smart contracts integrates the circle CCTP smart contracts to allow bridging USDC accross
-Ethereum, Arbitrum and Avalanche.
-- Ethereum Mainnet [Coming soon...]
+### Circle CCTP Contracts (CrossChainBridge)
+
+Our smart contracts integrate Circle's CCTP contracts,
+enabling seamless bridging of USDC across Ethereum, Arbitrum, and Avalanche networks.
+
+- Ethereum Mainnet (Coming soon)
 - Arbitrum Mainnet [0x8e326D9F79a9D944C920fC7aE899Dd181ecB0491](https://arbiscan.io/address/0x8e326D9F79a9D944C920fC7aE899Dd181ecB0491)
 - Avalanche Mainnet [0x8e326D9F79a9D944C920fC7aE899Dd181ecB0491](https://snowtrace.io/address/0x8e326d9f79a9d944c920fc7ae899dd181ecb0491)
 - Ethereum Goerli [0x354116A3BEFD3C2B9E98BC35127daCf735471AD8](https://goerli.etherscan.io/address/0x354116A3BEFD3C2B9E98BC35127daCf735471AD8)
 - Arbitrum Goerli [0x354116A3BEFD3C2B9E98BC35127daCf735471AD8](https://goerli.arbiscan.io/address/0x354116A3BEFD3C2B9E98BC35127daCf735471AD8)
 - Avalanche Fuji [0x7c1ba3e858e45fd789c86ec687b90d0f932679d0](https://testnet.snowtrace.io/address/0x7c1ba3e858e45fd789c86ec687b90d0f932679d0)
 
+To learn more about CCTP, visit this [link](https://developers.circle.com/stablecoin/docs/cctp-getting-started)
 
-### Polygon LXLY(Rollup Bridge)
-Allows bridging assets from ethereum to polygon zkevm and vice-versa. It uses the polygon LXLY Bridge.
-- Ethereum Mainnet [Coming soon...]
-- Polygon ZKEVM [Coming soon...]
+
+### Polygon LxLy (RollupBridge)
+
+This facilitates the bridging of assets between Ethereum and Polygon zkEVM networks through the Polygon zkEVM Bridge.
+
+- Ethereum Mainnet (Coming soon)
+- Polygon zkEVM (Coming soon)
 - Ethereum Goerli [0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b](https://goerli.etherscan.io/address/0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b)
-- Polygon ZKEVM Testnet [0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b](https://testnet-zkevm.polygonscan.com/address/0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b)
+- Polygon zkEVM Testnet [0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b](https://testnet-zkevm.polygonscan.com/address/0xA7e800f51dFb9Fd8C09067d7fC5757e06e57F27b)
+
+
 ## 👍 Contributing
 <sup>[(Back to top)](#------------------------)</sup>
 
