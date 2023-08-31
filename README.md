@@ -112,7 +112,7 @@ Here are a few ways you can get involved:
 - **Spread the Word**: Help us reach more enthusiasts by sharing the project with your network. The more creators and collectors we bring together, the stronger our community becomes.
 - **Feature Requests**: If you have ideas for new features or improvements, share them with us! We're excited to hear how we can enhance the marketplace to better serve the community.
 - **Code Contributions**: Developers can contribute by submitting pull requests. Whether it's fixing bugs, optimizing code, or adding new functionalities, your code contributions are invaluable.
-- **Bug Reports and Feedback**: If you encounter any issues or have suggestions for improvement, please open an issue on GitHub. Your feedback helps us maintain a high-quality marketplace experience.
+- **Bug Reports and Feedback**: If you encounter any issues or have suggestions for improvement, please open an issue on GitHub.
 
 
 ## 👥 Team
@@ -120,9 +120,9 @@ Here are a few ways you can get involved:
 
 Meet the creative minds who brought this project to life:
 
-| **Name**            | **Role**                        | **GitHub**                                    |
-|---------------------|---------------------------------|-----------------------------------------------|
-| Olayinka Ganiyu     | Smart Contract Developer (LxLy) | [GitHub](https://github.com/Jaybee020)        |
-| Kester Atakere      | Designer & Frontend Developer   | [GitHub](https://github.com/codergon)         |
-| Tobiloba Emmanuel   | Smart Contract Developer (CCTP) | [GitHub](https://github.com/Tee-py)           |
-| Isaac Adewumi       | Backend Developer               | [GitHub](https://github.com/prettyirrelevant) |
+| **Name**            | **Role**                       | **GitHub**                                    |
+|---------------------|--------------------------------|-----------------------------------------------|
+| Olayinka Ganiyu     | Smart Contract Engineer (LxLy) | [GitHub](https://github.com/Jaybee020)        |
+| Kester Atakere      | Designer & Frontend Engineer   | [GitHub](https://github.com/codergon)         |
+| Tobiloba Emmanuel   | Smart Contract Engineer (CCTP) | [GitHub](https://github.com/Tee-py)           |
+| Isaac Adewumi       | Backend Engineer               | [GitHub](https://github.com/prettyirrelevant) |

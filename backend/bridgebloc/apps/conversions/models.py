@@ -56,10 +56,13 @@ class TokenConversion(UUIDModel, TimestampedModel, models.Model):
 
     @property
     def actual_amount(self) -> Decimal:
+        max_fee = Decimal(20)
         if self.conversion_type == ConversionMethod.CIRCLE_API:
-            return self.amount * Decimal('0.96')
+            fee_charged = min(Decimal(0.04) * self.amount, max_fee)
+            return self.amount - fee_charged
 
-        return self.amount * Decimal('0.97')
+        fee_charged = min(Decimal(0.03) * self.amount, max_fee)
+        return self.amount - fee_charged
 
 
 class TokenConversionStep(UUIDModel, TimestampedModel, models.Model):

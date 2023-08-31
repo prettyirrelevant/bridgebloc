@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from eth_account import Account
-from eth_utils import to_bytes
+from eth_utils.conversions import to_bytes
 from huey import crontab
 from huey.contrib.djhuey import db_periodic_task, lock_task
 from web3.types import TxParams
@@ -267,7 +267,7 @@ def cctp_send_token_to_recipient() -> None:
                 to_bytes(hexstr=step.metadata['message_bytes']),
                 to_bytes(hexstr=step.metadata['attestation']),
                 step.metadata['nonce'],
-                int(usdc_token.convert_from_token_to_wei(step.conversion.actual_amount)),
+                int(usdc_token.convert_from_token_to_wei(step.conversion.actual_amount)),  # type: ignore[union-attr]
                 step.conversion.destination_token.address,
                 step.conversion.destination_address,
             )

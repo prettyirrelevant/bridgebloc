@@ -70,6 +70,10 @@ class CircleAPITokenConversionInitialisationSerializer(serializers.Serializer):
         except ValueError as e:
             raise serializers.ValidationError(str(e)) from e
 
+        # Only allow testnet for now since Circle Live API requires verification.
+        if source_chain.is_mainnet() or destination_chain.is_mainnet():
+            raise serializers.ValidationError('Only testnet network is supported via Circle API for now.')
+
         if source_chain == destination_chain:
             raise serializers.ValidationError('source_chain cannot be the same as destination_chain')
 
@@ -142,7 +146,7 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
         attrs.update(info)
         return attrs
 
-    def _validate_tx_receipt(
+    def _validate_tx_receipt(  # pylint: disable=too-many-locals
         self,
         client: EVMClient,
         receipt: TxReceipt,
@@ -212,7 +216,7 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             'message_bytes': found_message_sent_events[0].args.message.hex(),
             'message_hash': Web3.keccak(found_message_sent_events[0].args.message).hex(),
             'destination_address': to_checksum_address(bridge_deposit_received_event['recipient']),
-            'amount': usdc_token.convert_from_wei_to_token(bridge_deposit_received_event['amount']),
+            'amount': usdc_token.convert_from_wei_to_token(bridge_deposit_received_event['amount']),  # type: ignore[union-attr] # noqa: E501
         }
 
 
