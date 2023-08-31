@@ -78,7 +78,7 @@ We believe in cost-effective solutions. Our platform offers a reasonable fee str
 We're committed to continuous improvement. Here's what's in the pipeline:
 
 - **Multi-Routing:** Soon, you'll have the flexibility to move across chains without limitations.
-- **Expanded Token Support:** We're aworking to add more tokens to facilitate seamless transfers across different chains.
+- **Expanded Token Support:** We're working to add more tokens to facilitate seamless transfers across different chains.
 - **Fiat On & Off-Ramp:** We plan to introduce a feature that will allow you to easily convert between digital assets and fiat currency.
 
 Stay tuned for these exciting enhancements!
@@ -88,11 +88,12 @@ Stay tuned for these exciting enhancements!
 Please note that due to gas implications,
 we did not deploy contracts to interact with Polygon zkEVM Bridge & Circle's CCTP contracts on Ethereum mainnet.
 However, all contracts are available on testnet networks for all supported EVM chains.
-Please be aware that only USDC can be bridged, as the liquidity of other tokens cannot be determined,
+Please be aware that on testnet only USDC can be bridged, as the liquidity of other tokens cannot be determined,
 and discovering router addresses for DEXes on the testnet posed difficulties.
 
 
 ## 🔄 Token Transfer Routes
+<sup>[(Back to top)](#------------------------)</sup>
 
 Our project provides convenient routes for transferring tokens across various EVM-compatible chains.
 These routes specify the paths for moving tokens between source and destination chains:
