@@ -14,7 +14,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
-        url: `https://zkevm-rpc.com`,
+        url: `https://mainnet.infura.io/v3/${INFURA_API_KEY}`,
       },
     },
     goerli: {

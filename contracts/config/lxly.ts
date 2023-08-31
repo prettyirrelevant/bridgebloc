@@ -120,7 +120,7 @@ export const deploymentVariablesDict = {
         {
           sourceAddr: "0x0000000000000000000000000000000000000000", //bridge raw ETH on mainnet
           destinationAddr: "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9", //original WETH  on zkEVM
-          swapFee: 100,
+          swapFee: 500,
           claimFeePercentage: 300,
           maxClaimFeeAmount: parseUnits("0.05", 18),
         },

@@ -6,7 +6,9 @@ type Chain = "eth" | "zkEVM";
 
 async function deploy(network: Network, chain: Chain) {
   const deploymentVariables = deploymentVariablesDict[network][chain];
-  const bridge = await ethers.deployContract("RollupBridge", [
+  const factory = chain == "eth" ? "RollupETHBridge" : "RollupBridges";
+  const bridge = await ethers.deployContract(factory, [
+    deploymentVariables.supportedDepositTokens,
     deploymentVariables.polygonZkEVMBridge,
     deploymentVariables.counterpartNetwork,
     deploymentVariables.swapRouterAddr,
@@ -14,7 +16,9 @@ async function deploy(network: Network, chain: Chain) {
   ]);
 
   await bridge.waitForDeployment();
-  console.log(`Rollup Bridge Deployed At: ${bridge.target} Chain: ${chain} Network: ${network}`);
+  console.log(
+    `Rollup Bridge Deployed At: ${bridge.target} Chain: ${chain} Network: ${network}`
+  );
 }
 
 // deploy("testnet", "zkEVM").catch((error) => console.log(error));

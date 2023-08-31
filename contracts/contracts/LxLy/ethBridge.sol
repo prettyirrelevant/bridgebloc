@@ -6,13 +6,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-// import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
 import "./libraries/PolygonBridgeLib.sol";
 import "./interfaces/WETH.sol";
-import "./interfaces/ISwapRouter.sol";
 
-contract RollupBridge is PolygonBridgeLib, Ownable {
+contract RollupETHBridge is PolygonBridgeLib, Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -76,7 +75,7 @@ contract RollupBridge is PolygonBridgeLib, Ownable {
     }
 
     function addToken(address destinationToken,SupportedDestinationToken memory tokenData )external onlyOwner returns(bool) {
-        require(tokenData.claimFeePercentage < BASIS_POINT,'Invalid fee');
+        require(tokenData.claimFeePercentage < BASIS_POINT,'Invalid claimFee');
         SupportedDestinationToken storage newToken = supportedDestinationTokens[destinationToken];
         newToken.sourceAddr=tokenData.sourceAddr;
         newToken.destinationAddr=tokenData.destinationAddr;
@@ -192,11 +191,12 @@ contract RollupBridge is PolygonBridgeLib, Ownable {
             ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
                 tokenIn: _tokenIn,
                 tokenOut: _tokenOut,
+                fee:_fee,
                 recipient: _recipient,
                 deadline: block.timestamp,
                 amountIn: amount,
                 amountOutMinimum: 0,
-                limitSqrtPrice: 0
+                sqrtPriceLimitX96: 0
             });
             amountOut = swapRouter.exactInputSingle(params);
     }
