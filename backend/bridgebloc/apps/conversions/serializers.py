@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 from eth_utils.address import to_checksum_address
@@ -23,6 +24,17 @@ from .utils import (
     get_token_messenger_deployment_address,
     is_valid_route,
 )
+
+
+class CircleTokenConversionDepositTxHashUpdateSerializer(serializers.Serializer):
+    tx_hash = serializers.CharField(required=True)
+
+    def validate_tx_hash(self, value: str) -> str:
+        is_valid_hash = re.fullmatch('^0x[a-fA-F0-9]{64}', value)
+        if not bool(is_valid_hash):
+            raise serializers.ValidationError('Invalid transaction hash provided')
+
+        return value
 
 
 class TokenConversionStepSerializer(serializers.ModelSerializer):

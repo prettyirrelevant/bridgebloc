@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from typing import Any
 
@@ -27,6 +26,7 @@ from .permissions import IsOwner
 from .serializers import (
     CCTPTokenConversionInitialisationSerializer,
     CircleAPITokenConversionInitialisationSerializer,
+    CircleTokenConversionDepositTxHashUpdateSerializer,
     LxLyTokenConversionInitialisationSerializer,
     TokenConversionSerializer,
 )
@@ -46,10 +46,14 @@ class ValidTokenConversionRoutesAPIView(APIView):
 
 class CircleTokenConversionDepositTxHashUpdateAPIView(GenericAPIView):
     queryset = TokenConversion.objects.select_related('creator').prefetch_related('conversion_steps')
+    serializer_class = CircleTokenConversionDepositTxHashUpdateSerializer
     permission_classes = (IsAuthenticated, IsOwner)
     lookup_field = 'uuid'
 
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         obj = self.get_object()
         step = obj.conversion_steps.filter(step_type=CircleAPIConversionStepType.CONFIRM_DEPOSIT).first()
         if step is None:
@@ -59,19 +63,7 @@ class CircleTokenConversionDepositTxHashUpdateAPIView(GenericAPIView):
                 message='Token conversion is not of Circle API type or deposit address has not been created',
             )
 
-        tx_hash = request.data['tx_hash']
-
-        def is_transaction_valid(val: str) -> bool:
-            return bool(re.fullmatch('^0x[a-fA-F0-9]{64}', val))
-
-        if not is_transaction_valid(tx_hash):
-            return error_response(
-                errors=None,
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                message='Malformed transaction hash provided',
-            )
-
-        step.metadata['deposit_tx_hash'] = tx_hash
+        step.metadata['deposit_tx_hash'] = serializer.validated_data['tx_hash']
         step.save()
         return success_response(data=None)
 
