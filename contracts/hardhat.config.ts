@@ -26,11 +26,19 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
     },
     arbitrum: {
-      url: "",
+      url: "https://arbitrum-one.public.blastapi.io",
       accounts: [PRIVATE_KEY],
     },
     arbitrumTestnet: {
       url: "https://arbitrum-goerli.publicnode.com",
+      accounts: [PRIVATE_KEY],
+    },
+    avalanche: {
+      url: "https://avalanche.public-rpc.com",
+      accounts: [PRIVATE_KEY],
+    },
+    avalancheTestnet: {
+      url: "https://avalanche-fuji-c-chain.publicnode.com",
       accounts: [PRIVATE_KEY],
     },
     zkEVM: { url: "https://zkevm-rpc.com", accounts: [PRIVATE_KEY] },
