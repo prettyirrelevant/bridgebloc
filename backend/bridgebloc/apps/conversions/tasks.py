@@ -311,7 +311,7 @@ def get_lxly_merkle_proofs() -> None:
                     'merkle_proof': result['proof']['merkle_proof'],
                     'main_exit_root': result['proof']['main_exit_root'],
                     'rollup_exit_root': result['proof']['rollup_exit_root'],
-                    'bridged_amount': step.metadata['amount'],
+                    'bridged_amount': step.metadata['bridged_amount'],
                     'deposit_count': step.metadata['depositCount'],
                     'origin_network': step.metadata['originNetwork'],
                     'origin_address': step.metadata['originAddress'],
