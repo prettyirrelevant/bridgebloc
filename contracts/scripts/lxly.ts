@@ -6,7 +6,7 @@ type Chain = "eth" | "zkEVM";
 
 async function deploy(network: Network, chain: Chain) {
   const deploymentVariables = deploymentVariablesDict[network][chain];
-  const factory = chain == "eth" ? "RollupETHBridge" : "RollupBridges";
+  const factory = chain == "eth" ? "RollupETHBridge" : "RollupBridge";
   const bridge = await ethers.deployContract(factory, [
     deploymentVariables.supportedDepositTokens,
     deploymentVariables.polygonZkEVMBridge,

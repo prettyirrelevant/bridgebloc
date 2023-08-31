@@ -26,19 +26,19 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
     },
     arbitrum: {
-      url: "https://arbitrum-one.public.blastapi.io",
+      url: `https://arbitrum-mainnet.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [PRIVATE_KEY],
     },
     arbitrumTestnet: {
-      url: "https://arbitrum-goerli.publicnode.com",
+      url: `https://arbitrum-goerli.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [PRIVATE_KEY],
     },
     avalanche: {
-      url: "https://avalanche.public-rpc.com",
+      url: `https://avalanche-mainnet.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [PRIVATE_KEY],
     },
     avalancheTestnet: {
-      url: "https://avalanche-fuji-c-chain.publicnode.com",
+      url: `https://avalanche-fuji.infura.io/v3/${INFURA_API_KEY}`,
       accounts: [PRIVATE_KEY],
     },
     zkEVM: { url: "https://zkevm-rpc.com", accounts: [PRIVATE_KEY] },
