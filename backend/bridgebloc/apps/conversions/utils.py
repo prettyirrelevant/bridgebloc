@@ -75,12 +75,12 @@ def get_polygon_zkevm_bridge_deployment_address(chain: ChainID) -> ChecksumAddre
 
 def get_rollup_bridge_deployment_address(chain: ChainID) -> ChecksumAddress:
     if not chain.is_valid_lxly_chain():
-        raise ValueError(f'{chain} is not a valid CCTP chain')
+        raise ValueError(f'{chain} is not a valid LxLy chain')
 
     if chain.is_mainnet():
-        return to_checksum_address(settings.POLYGON_ZKEVM_BRIDGE_DEPLOYED_ADDRESS)
+        return to_checksum_address(settings.ROLLUP_BRIDGE_POLYGON_ZKEVM_DEPLOYED_ADDRESS)
 
-    return to_checksum_address(settings.POLYGON_ZKEVM_BRIDGE_TESTNET_DEPLOYED_ADDRESS)
+    return to_checksum_address(settings.ROLLUP_BRIDGE_POLYGON_ZKEVM_TESTNET_DEPLOYED_ADDRESS)
 
 
 def get_attestation_client(chain: ChainID) -> AttestationService:

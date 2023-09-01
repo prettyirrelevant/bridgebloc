@@ -309,9 +309,6 @@ class LxLyTokenConversionInitialisationSerializer(serializers.Serializer):
         if polygon_zkevm_bridge_event['destinationNetwork'] != destination_chain.to_lxly_domain():
             raise serializers.ValidationError('lxly domain from event and serializer mismatch for destination chain')
 
-        # if self.context['request'].user.address != to_checksum_address(polygon_zkevm_bridge_event['from']):
-        #     raise serializers.ValidationError(
-
         try:
             source_token = Token.objects.get(
                 chain_id=source_chain,

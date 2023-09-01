@@ -319,11 +319,11 @@ def get_lxly_merkle_proofs() -> None:
                         'main_exit_root': result['proof']['main_exit_root'],
                         'rollup_exit_root': result['proof']['rollup_exit_root'],
                         'bridged_amount': step.metadata['bridged_amount'],
-                        'deposit_count': step.metadata['depositCount'],
-                        'origin_network': step.metadata['originNetwork'],
-                        'origin_address': step.metadata['originAddress'],
-                        'destination_network': step.metadata['destinationNetwork'],
-                        'destination_address': step.metadata['destinationAddress'],
+                        'deposit_count': step.metadata['deposit_count'],
+                        'origin_network': step.metadata['origin_network'],
+                        'origin_address': step.metadata['origin_address'],
+                        'destination_network': step.metadata['destination_network'],
+                        'destination_address': step.metadata['destination_address'],
                     },
                     conversion=step.conversion,
                     status=TokenConversionStepStatus.PENDING,
@@ -346,12 +346,19 @@ def claim_assets_at_destination_lxly() -> None:
         try:
             with transaction.atomic():
                 evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
+                deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
                 contract = evm_client.get_contract(
                     name='PolygonZkEVMBridge',
                     address=get_polygon_zkevm_bridge_deployment_address(step.conversion.destination_chain),
                 )
-                deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
-                send_to_recipient_fn__call = contract.functions.claimAsset(
+
+                is_claimed = contract.functions.isClaimed(step.metadata['deposit_count']).call()
+                if is_claimed:
+                    step.status = TokenConversionStepStatus.SUCCESSFUL
+                    step.save()
+                    continue
+
+                send_to_recipient_fn_call = contract.functions.claimAsset(
                     [to_bytes(hexstr=i) for i in step.metadata['merkle_proof']],
                     step.metadata['deposit_count'],
                     to_bytes(hexstr=step.metadata['main_exit_root']),
@@ -360,10 +367,10 @@ def claim_assets_at_destination_lxly() -> None:
                     step.metadata['origin_address'],
                     step.metadata['destination_network'],
                     step.metadata['destination_address'],
-                    step.metadata['bridged_amount'],  # fee is included during contract call
-                    b'',  # I'm not entirely sure how to pass an empty byte to a contract call
+                    step.metadata['bridged_amount'],
+                    to_bytes(text=''),
                 )
-                unsigned_tx = send_to_recipient_fn__call.build_transaction(
+                unsigned_tx = send_to_recipient_fn_call.build_transaction(
                     TxParams(
                         {
                             'from': deployer.address,
