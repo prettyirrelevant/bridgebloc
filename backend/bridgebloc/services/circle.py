@@ -77,7 +77,7 @@ class CircleAPI:
                     'address': to_checksum_address(destination_address),
                     'chain': chain,
                 },
-                'amount': {'amount': str(amount), 'currency': 'USD'},
+                'amount': {'amount': f'{amount:.2f}', 'currency': 'USD'},
             },
         )
         return response.json()

@@ -154,7 +154,7 @@ def send_to_recipient_using_circle_api() -> None:
             with transaction.atomic():
                 circle_client = get_circle_api_client(step.conversion.destination_chain)
                 response = circle_client.make_withdrawal(
-                    amount=f'{step.conversion.actual_amount:.2f}',
+                    amount=step.conversion.actual_amount,
                     master_wallet_id=settings.CIRCLE_MASTER_WALLET_ID,
                     chain=step.conversion.destination_chain.to_circle(),
                     destination_address=step.conversion.destination_address,
