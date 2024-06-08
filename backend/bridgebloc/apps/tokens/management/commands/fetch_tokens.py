@@ -16,15 +16,16 @@ class Command(BaseCommand):
     SUPPORTED_COINGECKO_IDS = ('usd-coin', 'dai', 'tether', 'weth')
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
-        tokens_to_create = []
-        for coingecko_id in self.SUPPORTED_COINGECKO_IDS:
-            try:
-                token_data = self._fetch_mainnet_token_data(coingecko_id)
-                tokens_to_create.extend(self._extract_tokens(token_data))
-            except Exception as e:  # noqa: BLE001
-                raise CommandError(f'Error fetching token information for {coingecko_id}: {e}') from e
+        # NOTE: Polygon zkEVM and PoS have been migrated.
+        # tokens_to_create = []
+        # for coingecko_id in self.SUPPORTED_COINGECKO_IDS:
+        #     try:
+        #         token_data = self._fetch_mainnet_token_data(coingecko_id)
+        #         tokens_to_create.extend(self._extract_tokens(token_data))
+        #     except Exception as e:  # noqa: BLE001
+        #         raise CommandError(f'Error fetching token information for {coingecko_id}: {e}') from e
 
-        Token.objects.bulk_create(tokens_to_create, ignore_conflicts=True)
+        # Token.objects.bulk_create(tokens_to_create, ignore_conflicts=True)
 
         self._populate_testnet_token_data()
 
