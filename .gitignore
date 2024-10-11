@@ -1,6 +1,8 @@
 # Pyinstrument
 .profiles
 
+.DS_Store
+
 ### Node template
 # Logs
 logs
