@@ -13,6 +13,10 @@ class EVMAggregatorConfig:  # pylint:disable=too-many-instance-attributes
     avalanche_testnet_endpoints: list[str]
     arbitrum_one_endpoints: list[str]
     arbitrum_one_testnet_endpoints: list[str]
+    base_endpoints: list[str]
+    base_testnet_endpoints: list[str]
+    optimism_endpoints: list[str]
+    optimism_testnet_endpoints: list[str]
     polygon_pos_endpoints: list[str]
     polygon_pos_testnet_endpoints: list[str]
 

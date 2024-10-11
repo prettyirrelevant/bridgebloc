@@ -1,112 +1,101 @@
-from pathlib import Path
+import logging
 from typing import Any
 
 import requests
 
-from django.contrib.staticfiles import finders
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from bridgebloc.apps.tokens.models import Token
 from bridgebloc.evm.types import ChainID
 
+logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
-    help = 'Fetches and stores token information from Coingecko into the database'  # noqa: A003
+    """Fetches and stores token information from Coingecko into the database."""
 
+    help = 'Fetches and stores token information from Coingecko'  # noqa: A003
     SUPPORTED_COINGECKO_IDS = ('usd-coin', 'dai', 'tether', 'weth')
+    IMAGE_BASE_URL = 'https://raw.githubusercontent.com/SmolDapp/tokenAssets/main/tokens/{}/{}/logo-128.png'
 
     def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+        try:
+            self.fetch_and_store_mainnet_tokens()
+        except Exception:
+            logger.exception('Error in fetch_and_store_mainnet_tokens')
+
+        try:
+            self.populate_testnet_tokens()
+        except Exception:
+            logger.exception('Error in populate_testnet_tokens')
+
+    def fetch_and_store_mainnet_tokens(self) -> None:
+        """Fetches mainnet token data from Coingecko and stores it in the database."""
         tokens_to_create = []
+
         for coingecko_id in self.SUPPORTED_COINGECKO_IDS:
             try:
-                token_data = self._fetch_mainnet_token_data(coingecko_id)
-                tokens_to_create.extend(self._extract_tokens(token_data))
-            except Exception as e:  # noqa: BLE001
-                raise CommandError(f'Error fetching token information for {coingecko_id}: {e}') from e
+                url = f'https://api.coingecko.com/api/v3/coins/{coingecko_id}'
+                response = requests.get(url, timeout=10)
+                response.raise_for_status()
+                token_data = response.json()
 
-        Token.objects.bulk_create(tokens_to_create, ignore_conflicts=True)
+                for chain_id in ChainID:
+                    if not chain_id.is_mainnet():
+                        continue
 
-        self._populate_testnet_token_data()
+                    platform_data = token_data['detail_platforms'][chain_id.to_coingecko_id()]
+                    address = platform_data['contract_address']
+                    image_url = self.IMAGE_BASE_URL.format(chain_id.value, address)
 
-    @staticmethod
-    def _populate_testnet_token_data() -> None:
-        token_addresses: dict[ChainID, list[tuple[str, str]]] = {
-            ChainID.ETHEREUM_TESTNET: [
-                ('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', 'usd-coin'),
-            ],
-            ChainID.ARBITRUM_ONE_TESTNET: [
-                ('0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63', 'usd-coin'),
-            ],
-            ChainID.POLYGON_POS_TESTNET: [
-                ('0x0FA8781a83E46826621b3BC094Ea2A0212e71B23', 'usd-coin'),
-            ],
-            ChainID.AVALANCHE_TESTNET: [
-                ('0x5425890298aed601595a70AB815c96711a31Bc65', 'usd-coin'),
-            ],
-            ChainID.POLYGON_ZKEVM_TESTNET: [
-                ('0xA40b0dA87577Cd224962e8A3420631E1C4bD9A9f', 'usd-coin'),
-            ],
-        }
-        testnet_tokens = []
-        for chain_id, tokens in token_addresses.items():
-            for token in tokens:
-                mainnet_token = Token.objects.filter(coingecko_id=token[1]).first()
-                if mainnet_token:
-                    testnet_tokens.append(
+                    tokens_to_create.append(
                         Token(
-                            name=mainnet_token.name,
-                            symbol=mainnet_token.symbol,
                             chain_id=chain_id,
-                            decimals=mainnet_token.decimals,
-                            coingecko_id=mainnet_token.coingecko_id,
-                            address=token[0],
+                            name=token_data['name'],
+                            symbol=token_data['symbol'],
+                            coingecko_id=token_data['id'],
+                            decimals=platform_data['decimal_place'],
+                            address=address,
+                            image_url=image_url,
                         ),
                     )
 
-        Token.objects.bulk_create(testnet_tokens, ignore_conflicts=True)
+            except Exception:
+                logger.exception(f'Error fetching token information for {coingecko_id}')
+
+        if tokens_to_create:
+            logger.warning('No mainnet tokens were created.')
+
+        Token.objects.bulk_create(tokens_to_create, ignore_conflicts=True)
 
     @staticmethod
-    def _fetch_mainnet_token_data(coingecko_id: str) -> dict[str, Any]:
-        """Fetches token data from the Coingecko API."""
-        url = f'https://api.coingecko.com/api/v3/coins/{coingecko_id}'
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        return response.json()
+    def populate_testnet_tokens() -> None:
+        """Populates testnet token data based on mainnet tokens."""
+        testnet_data = {
+            ChainID.ETHEREUM_TESTNET: [('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', 'usd-coin')],
+            ChainID.ARBITRUM_ONE_TESTNET: [('0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63', 'usd-coin')],
+            ChainID.POLYGON_POS_TESTNET: [('0x0FA8781a83E46826621b3BC094Ea2A0212e71B23', 'usd-coin')],
+            ChainID.AVALANCHE_TESTNET: [('0x5425890298aed601595a70AB815c96711a31Bc65', 'usd-coin')],
+            ChainID.BASE_TESTNET: [('0x036CbD53842c5426634e7929541eC2318f3dCF7e', 'usd-coin')],
+            ChainID.OPTIMISM_TESTNET: [('0x5fd84259d66Cd46123540766Be93DFE6D43130D7', 'usd-coin')],
+        }
 
-    def _extract_tokens(self, token_data: dict[str, Any]) -> list[Token]:
-        """Extracts tokens from token data."""
-        tokens = []
-        for chain_id in ChainID:
-            if not chain_id.is_mainnet():
-                continue
-
-            if chain_id == ChainID.POLYGON_ZKEVM and token_data['id'] == 'weth':
-                continue
-
-            tokens.append(
-                Token(
-                    chain_id=chain_id,
-                    name=token_data['name'],
-                    symbol=token_data['symbol'],
-                    coingecko_id=token_data['id'],
-                    decimals=token_data['detail_platforms'][chain_id.to_coingecko_id()]['decimal_place'],
-                    address=token_data['detail_platforms'][chain_id.to_coingecko_id()]['contract_address'],
-                ),
+        testnet_tokens = [
+            Token(
+                name=mainnet_token.name,
+                symbol=mainnet_token.symbol,
+                chain_id=testnet_chain_id,
+                decimals=mainnet_token.decimals,
+                coingecko_id=mainnet_token.coingecko_id,
+                address=address,
+                image_url=mainnet_token.image_url,
             )
+            for testnet_chain_id, tokens in testnet_data.items()
+            for address, coingecko_id in tokens
+            if (mainnet_token := Token.objects.filter(coingecko_id=coingecko_id).first())
+        ]
 
-            self._save_token_image(token_data['id'], token_data['image']['large'])
+        if not testnet_tokens:
+            logger.warning('No testnet tokens were created.')
 
-        return tokens
-
-    @staticmethod
-    def _save_token_image(coingecko_id: str, url: str) -> None:
-        """Save a token image to the ``tokens`` static directory."""
-        result = finders.find(f'images/{coingecko_id}.png')
-        if result:
-            return
-
-        image_path = Path(__file__).resolve().parent.parent.parent / 'static' / 'images' / f'{coingecko_id}.png'
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        with image_path.open('wb') as f:
-            f.write(response.content)
+        Token.objects.bulk_create(testnet_tokens, ignore_conflicts=True)

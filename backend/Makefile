@@ -3,15 +3,15 @@ LINT_PATHS = bridgebloc/ manage.py
 include .env.dev
 
 lint:
-	isort $(LINT_PATHS) --diff --check-only
-	ruff $(LINT_PATHS)
-	pylint $(LINT_PATHS)
-	mypy $(LINT_PATHS) --install-types --non-interactive
+	uv run isort $(LINT_PATHS) --diff --check-only
+	uv run ruff $(LINT_PATHS)
+	uv run pylint $(LINT_PATHS)
+	uv run mypy $(LINT_PATHS) --install-types --non-interactive
 
 format:
-	isort $(LINT_PATHS)
-	ruff $(LINT_PATHS) --fix
-	black $(LINT_PATHS)
+	uv run isort $(LINT_PATHS)
+	uv run ruff $(LINT_PATHS) --fix
+	uv run black $(LINT_PATHS)
 
 test:
 	@echo "Running tests..."

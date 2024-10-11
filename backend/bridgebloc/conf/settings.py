@@ -264,21 +264,15 @@ SWAGGER_SETTINGS = {
     },
 }
 
-# ==============================================================================
-# CIRCLE API SETTINGS
-# ==============================================================================
-CIRCLE_MASTER_WALLET_ID = env.int('CIRCLE_MASTER_WALLET_ID')
-CIRCLE_SANDBOX_API_KEY = env.str('CIRCLE_SANDBOX_API_KEY')
-CIRCLE_SANDBOX_BASE_URL = env.str('CIRCLE_SANDBOX_BASE_URL')
-CIRCLE_LIVE_API_KEY = env.str('CIRCLE_LIVE_API_KEY')
-CIRCLE_LIVE_BASE_URL = env.str('CIRCLE_LIVE_BASE_URL')
-CIRCLE_ATTESTATION_BASE_URL = env.str('CIRCLE_ATTESTATION_BASE_URL')
-CIRCLE_SANDBOX_ATTESTATION_BASE_URL = env.str('CIRCLE_SANDBOX_ATTESTATION_BASE_URL')
-
 
 # ==============================================================================
 # CCTP SETTINGS
 # ==============================================================================
+# Attestation Service
+CIRCLE_ATTESTATION_BASE_URL = env.str('CIRCLE_ATTESTATION_BASE_URL')
+CIRCLE_SANDBOX_ATTESTATION_BASE_URL = env.str('CIRCLE_SANDBOX_ATTESTATION_BASE_URL')
+
+# Rpc
 ETHEREUM_RPC_NODES = env.list('ETHEREUM_RPC_NODES')
 POLYGON_POS_RPC_NODES = env.list('POLYGON_POS_RPC_NODES')
 ARBITRUM_ONE_RPC_NODES = env.list('ARBITRUM_ONE_RPC_NODES')

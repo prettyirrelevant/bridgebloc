@@ -15,6 +15,7 @@ class Token(UUIDModel, TimestampedModel, models.Model):
     symbol = models.CharField('symbol', max_length=200, blank=False)
     chain_id = EVMChainIDField('chain id', blank=False)
     decimals = models.IntegerField('decimals', blank=False)
+    image_url = models.URLField('image url', blank=False)
     coingecko_id = models.CharField('coingecko id', max_length=200, blank=False)
     address = EVMAddressField('address', blank=False, unique=True)
 

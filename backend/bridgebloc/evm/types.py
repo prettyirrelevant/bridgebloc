@@ -3,14 +3,18 @@ from enum import IntEnum, unique
 
 @unique
 class ChainID(IntEnum):
+    BASE = 8453
     ETHEREUM = 1
-    AVALANCHE = 43114
+    OPTIMISM = 10
     POLYGON_POS = 137
+    AVALANCHE = 43114
+    BASE_TESTNET = 84532
     ARBITRUM_ONE = 42161
     ETHEREUM_TESTNET = 5
-    ARBITRUM_ONE_TESTNET = 421613
     AVALANCHE_TESTNET = 43113
     POLYGON_POS_TESTNET = 80001
+    OPTIMISM_TESTNET = 11155420
+    ARBITRUM_ONE_TESTNET = 421613
 
     @classmethod
     def values(cls) -> list[int]:
@@ -26,6 +30,9 @@ class ChainID(IntEnum):
     def to_coingecko_id(self) -> str:
         if not self.is_mainnet():
             raise ValueError('Cannot convert testnet blockchain to CoinGecko ID')
+
+        if self == ChainID.OPTIMISM:
+            return 'optimistic-ethereum'
 
         return self.name.lower().replace('_', '-')
 
@@ -47,6 +54,15 @@ class ChainID(IntEnum):
         if self in {ChainID.ARBITRUM_ONE, ChainID.ARBITRUM_ONE_TESTNET}:
             return 3
 
+        if self in {ChainID.BASE, ChainID.BASE_TESTNET}:
+            return 6
+
+        if self in {ChainID.POLYGON_POS, ChainID.POLYGON_POS_TESTNET}:
+            return 7
+
+        if self in {ChainID.OPTIMISM, ChainID.OPTIMISM_TESTNET}:
+            return 2
+
         raise ValueError(f'{self} is not supported by CCTP')
 
     def is_valid_cctp_chain(self) -> bool:
@@ -56,16 +72,6 @@ class ChainID(IntEnum):
             return False
 
         return True
-
-    def to_circle(self) -> str:
-        if self.name.startswith('ETHEREUM'):
-            return 'ETH'
-        if self.name.startswith('AVALANCHE'):
-            return 'AVAX'
-        if self.name.startswith('POLYGON_POS'):
-            return 'MATIC'
-
-        raise ValueError(f'Circle API does not support {self.name}')
 
     def __str__(self) -> str:
         return self.name.lower()

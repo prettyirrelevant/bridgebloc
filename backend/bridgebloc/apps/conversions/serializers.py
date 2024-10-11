@@ -1,4 +1,3 @@
-import re
 from typing import Any
 
 from eth_utils.address import to_checksum_address
@@ -16,23 +15,7 @@ from bridgebloc.evm.client import EVMClient
 from bridgebloc.evm.types import ChainID
 
 from .models import TokenConversion, TokenConversionStep
-from .types import ConversionMethod
-from .utils import (
-    get_cross_chain_bridge_deployment_address,
-    get_token_messenger_deployment_address,
-    is_valid_route,
-)
-
-
-class CircleTokenConversionDepositTxHashUpdateSerializer(serializers.Serializer):
-    tx_hash = serializers.CharField(required=True)
-
-    def validate_tx_hash(self, value: str) -> str:
-        is_valid_hash = re.fullmatch('^0x[a-fA-F0-9]{64}', value)
-        if not bool(is_valid_hash):
-            raise serializers.ValidationError('Invalid transaction hash provided')
-
-        return value
+from .utils import get_cross_chain_bridge_deployment_address, get_token_messenger_deployment_address
 
 
 class TokenConversionStepSerializer(serializers.ModelSerializer):
@@ -65,63 +48,6 @@ class TokenConversionSerializer(serializers.ModelSerializer):
         )
 
 
-class CircleAPITokenConversionInitialisationSerializer(serializers.Serializer):
-    source_chain = serializers.CharField(required=True)
-    source_token = serializers.CharField(required=True)
-    destination_chain = serializers.CharField(required=True)
-    destination_token = serializers.CharField(required=True)
-    destination_address = serializers.CharField(required=True)
-    amount = serializers.DecimalField(required=True, max_digits=16, decimal_places=2, min_value=1)
-
-    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        try:
-            source_chain = ChainID.from_name(attrs['source_chain'])
-            destination_chain = ChainID.from_name(attrs['destination_chain'])
-        except ValueError as e:
-            raise serializers.ValidationError(str(e)) from e
-
-        # Only allow testnet for now since Circle Live API requires verification.
-        if source_chain.is_mainnet() or destination_chain.is_mainnet():
-            raise serializers.ValidationError('Only testnet network is supported via Circle API for now.')
-
-        if source_chain == destination_chain:
-            raise serializers.ValidationError('source_chain cannot be the same as destination_chain')
-
-        if source_chain.is_mainnet() != destination_chain.is_mainnet():
-            raise serializers.ValidationError(
-                'Both source_chain and destination_chain must be on the same network (testnet or mainnet)',
-            )
-
-        if not is_valid_route(source_chain, destination_chain, ConversionMethod.CIRCLE_API):
-            raise serializers.ValidationError('Circle API not supported for the source and destination chain')
-
-        try:
-            source_token = Token.objects.get(address=to_checksum_address(attrs['source_token']), chain_id=source_chain)
-            if source_token.symbol != 'usdc':
-                raise serializers.ValidationError('Only USDC bridging is allowed via Circle API')
-        except Token.DoesNotExist as e:
-            raise serializers.ValidationError('Token does not exist') from e
-
-        try:
-            destination_token = Token.objects.get(
-                chain_id=destination_chain,
-                address=to_checksum_address(attrs['destination_token']),
-            )
-            if destination_token.symbol != 'usdc':
-                raise serializers.ValidationError('Only USDC bridging is allowed via Circle API')
-        except Token.DoesNotExist as e:
-            raise serializers.ValidationError('Token does not exist') from e
-
-        return {
-            'amount': attrs['amount'],
-            'source_chain': source_chain,
-            'source_token': source_token,
-            'destination_chain': destination_chain,
-            'destination_token': destination_token,
-            'destination_address': to_checksum_address(attrs['destination_address']),
-        }
-
-
 class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
     tx_hash = serializers.CharField(required=True)
     source_chain = serializers.CharField(required=True)
@@ -141,9 +67,6 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Both source_chain and destination_chain must be on the same network (testnet or mainnet)',
             )
-
-        if not is_valid_route(source_chain, destination_chain, ConversionMethod.CCTP):
-            raise serializers.ValidationError('CCTP not supported for the source and destination chain')
 
         evm_client = EVMAggregator().get_client(source_chain)  # pylint:disable=no-value-for-parameter
         tx_receipt = evm_client.get_transaction_receipt(attrs['tx_hash'])
