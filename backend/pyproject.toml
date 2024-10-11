@@ -1,51 +1,44 @@
-[tool.poetry]
-name = "bridgebloc-backend"
-version = "0.0.1"
-description = "Using Circle's services to create a bridge"
-authors = [
-  "Isaac Adewumi <ienioladewumi@gmail.com>",
-  "Tobiloba Emmanuel",
-  "Olayinka Ganiyu"
-]
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
 readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "django-cors-headers==4.2.0",
+    "django==4.2.4",
+    "djangorestframework==3.14.0",
+    "gunicorn==21.2.0",
+    "web3==6.8.0",
+    "huey==2.4.5",
+    "psycopg2-binary==2.9.7",
+    "django-environ==0.10.0",
+    "django-extra-checks==0.13.0",
+    "django-stubs-ext==4.2.2",
+    "redis==4.6.0",
+    "whitenoise==6.5.0",
+    "drf-yasg==1.21.7"
+]
 
-[tool.poetry.dependencies]
-python = "3.11.1"
-django-cors-headers = "^4.2.0"
-django = "^4.2.4"
-djangorestframework = "^3.14.0"
-gunicorn = "^21.2.0"
-web3 = "^6.8.0"
-huey = "^2.4.5"
-psycopg2-binary = "^2.9.7"
-django-environ = "^0.10.0"
-django-extra-checks = "^0.13.3"
-django-stubs-ext = "^4.2.2"
-redis = "^4.6.0"
-whitenoise = "^6.5.0"
-drf-yasg = {extras = ["validation"], version = "^1.21.7"}
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.0.282"
-mypy = "^1.4.1"
-black = "^23.7.0"
-isort = "^5.12.0"
-pylint = "^2.17.5"
-django-stubs = "^4.2.3"
-djangorestframework-stubs = "^3.14.2"
-pytest = "^7.4.0"
-pytest-django = "^4.5.2"
-pytest-cov = "^4.1.0"
-ipdb = "^0.13.13"
-pytest-deadfixtures = "^2.2.1"
-pytest-sugar = "^0.9.7"
-pylint-django = "^2.5.3"
-pyinstrument = "^4.5.1"
-ipython = "^8.14.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+dev-dependencies = [
+    "ruff==0.0.282",
+    "mypy==1.4.1",
+    "black==23.7.0",
+    "isort==5.12.0",
+    "pylint==2.17.5",
+    "django-stubs==4.2.3",
+    "djangorestframework-stubs==3.14.2",
+    "pytest==7.4.0",
+    "pytest-django==4.5.2",
+    "pytest-cov==4.1.0",
+    "ipdb==0.13.13",
+    "pytest-deadfixtures==2.2.1",
+    "pytest-sugar==0.9.7",
+    "pylint-django==2.5.3",
+    "pyinstrument==4.5.1",
+    "ipython==8.14.0"
+]
 
 [tool.black]
 line-length = 119
