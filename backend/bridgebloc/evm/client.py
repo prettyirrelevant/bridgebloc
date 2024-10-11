@@ -94,12 +94,9 @@ class EVMClient:
     def get_contract(
         self,
         address: ChecksumAddress,
-        name: Literal['CrossChainBridge', 'TokenMessenger', 'PolygonZkEVMBridge', 'RollupBridge'],
+        name: Literal['CrossChainBridge', 'TokenMessenger'],
     ) -> Contract:
         if name in {'CrossChainBridge', 'TokenMessenger'} and not self.chain.is_valid_cctp_chain():
-            raise ValueError(f'{name} contract is valid for {self.chain}')
-
-        if name in {'PolygonZkEVMBridge', 'RollupBridge'} and not self.chain.is_valid_lxly_chain():
             raise ValueError(f'{name} contract is valid for {self.chain}')
 
         abi_path = self.abi_dir / f'{name}.abi'

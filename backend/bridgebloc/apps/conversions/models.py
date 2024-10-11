@@ -49,9 +49,6 @@ class TokenConversion(UUIDModel, TimestampedModel, models.Model):
 
     2. For tokens bridged via CCTP:
        This represents the equivalent value of the source_token in USDC.
-
-    3. For tokens bridged via LxLy:
-       This represents the equivalent value of the source_token in terms of the destination_token.
     """
 
     @property

@@ -16,8 +16,3 @@ class CircleAPIConversionStepType(models.TextChoices):
 class CCTPConversionStepType(models.TextChoices):
     ATTESTATION_SERVICE_CONFIRMATION = 'attestation service confirmation'
     SEND_TO_RECIPIENT = 'send to recipient'
-
-
-class LxLyConversionStepType(models.TextChoices):
-    GET_MERKLE_PROOF = 'get merkle proof'
-    SEND_TO_RECIPIENT = 'send to recipient'

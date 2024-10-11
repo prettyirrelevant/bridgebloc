@@ -18,7 +18,6 @@ from .constants import VALID_CONVERSION_ROUTES
 from .enums import (
     CCTPConversionStepType,
     CircleAPIConversionStepType,
-    LxLyConversionStepType,
     TokenConversionStepStatus,
 )
 from .models import TokenConversion, TokenConversionStep
@@ -27,7 +26,6 @@ from .serializers import (
     CCTPTokenConversionInitialisationSerializer,
     CircleAPITokenConversionInitialisationSerializer,
     CircleTokenConversionDepositTxHashUpdateSerializer,
-    LxLyTokenConversionInitialisationSerializer,
     TokenConversionSerializer,
 )
 from .types import ConversionMethod
@@ -122,43 +120,6 @@ class CircleAPITokenConversionInitialisationAPIView(GenericAPIView):
                 status=TokenConversionStepStatus.PENDING,
                 step_type=CircleAPIConversionStepType.CREATE_DEPOSIT_ADDRESS,
             )
-        return success_response(data={'id': conversion.uuid}, status_code=status.HTTP_201_CREATED)
-
-
-class LxLyTokenConversionInitialisationAPIView(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
-    serializer_class = LxLyTokenConversionInitialisationSerializer
-
-    def post(self, request: AuthenticatedRequest, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        with transaction.atomic():
-            conversion = TokenConversion.objects.create(
-                creator=request.user,
-                amount=serializer.validated_data['amount'],
-                conversion_type=ConversionMethod.LXLY,
-                source_chain=serializer.validated_data['source_chain'],
-                source_token=serializer.validated_data['source_token'],
-                destination_token=serializer.validated_data['destination_token'],
-                destination_chain=serializer.validated_data['destination_chain'],
-                destination_address=serializer.validated_data['destination_address'],
-            )
-            TokenConversionStep.objects.create(
-                conversion=conversion,
-                step_type=LxLyConversionStepType.GET_MERKLE_PROOF,
-                metadata={
-                    'leaf_type': serializer.validated_data['leaf_type'],
-                    'origin_network': serializer.validated_data['origin_network'],
-                    'origin_address': serializer.validated_data['origin_address'],
-                    'destination_network': serializer.validated_data['destination_network'],
-                    'destination_address': serializer.validated_data['destination_address'],
-                    'deposit_count': serializer.validated_data['deposit_count'],
-                    'bridged_amount': serializer.validated_data['bridged_amount'],
-                },
-                status=TokenConversionStepStatus.PENDING,
-            )
-
         return success_response(data={'id': conversion.uuid}, status_code=status.HTTP_201_CREATED)
 
 

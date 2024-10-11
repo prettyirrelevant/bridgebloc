@@ -18,7 +18,6 @@ from bridgebloc.evm.aggregator import EVMAggregator
 from .enums import (
     CCTPConversionStepType,
     CircleAPIConversionStepType,
-    LxLyConversionStepType,
     TokenConversionStepStatus,
 )
 from .models import TokenConversionStep
@@ -27,8 +26,6 @@ from .utils import (
     get_attestation_client,
     get_circle_api_client,
     get_cross_chain_bridge_deployment_address,
-    get_merkle_proof_client,
-    get_polygon_zkevm_bridge_deployment_address,
 )
 
 logger = logging.getLogger(__name__)
@@ -291,97 +288,4 @@ def cctp_send_token_to_recipient() -> None:
                 step.save()
         except Exception:
             logger.exception('An error occured while sending token to the recipient of a CCTP bridging process.')
-            continue
-
-
-@db_periodic_task(crontab(minute='*/2'))
-@lock_task('get-lxly-merkle-proofs-lock')
-def get_lxly_merkle_proofs() -> None:
-    steps_requiring_merkle_proofs = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
-        status=TokenConversionStepStatus.PENDING,
-        conversion__conversion_type=ConversionMethod.LXLY,
-        step_type=LxLyConversionStepType.GET_MERKLE_PROOF,
-    )
-    for step in steps_requiring_merkle_proofs:
-        try:
-            with transaction.atomic():
-                merkle_proof_client = get_merkle_proof_client(step.conversion.source_chain)
-                result = merkle_proof_client.get_merkle_proof(
-                    deposit_count=step.metadata['deposit_count'],
-                    origin_id=step.conversion.source_chain.to_lxly_domain(),
-                )
-                step.status = TokenConversionStepStatus.SUCCESSFUL
-                step.save()
-
-                TokenConversionStep.objects.create(
-                    metadata={
-                        'merkle_proof': result['proof']['merkle_proof'],
-                        'main_exit_root': result['proof']['main_exit_root'],
-                        'rollup_exit_root': result['proof']['rollup_exit_root'],
-                        'bridged_amount': step.metadata['bridged_amount'],
-                        'deposit_count': step.metadata['deposit_count'],
-                        'origin_network': step.metadata['origin_network'],
-                        'origin_address': step.metadata['origin_address'],
-                        'destination_network': step.metadata['destination_network'],
-                        'destination_address': step.metadata['destination_address'],
-                    },
-                    conversion=step.conversion,
-                    status=TokenConversionStepStatus.PENDING,
-                    step_type=LxLyConversionStepType.SEND_TO_RECIPIENT,
-                )
-        except Exception:
-            logger.exception('An error occurred while retrieving merkle proof for LxLy bridging process')
-            continue
-
-
-@db_periodic_task(crontab(minute='*/3'))
-@lock_task('claim-assets-at-destination-lxly-lock')
-def claim_assets_at_destination_lxly() -> None:
-    claim_assets_steps = TokenConversionStep.objects.select_related('conversion__destination_token').filter(
-        status=TokenConversionStepStatus.PENDING,
-        conversion__conversion_type=ConversionMethod.LXLY,
-        step_type=LxLyConversionStepType.SEND_TO_RECIPIENT,
-    )
-    for step in claim_assets_steps:
-        try:
-            with transaction.atomic():
-                evm_client = EVMAggregator().get_client(step.conversion.destination_chain)
-                deployer = Account.from_key(settings.DEPLOYER_PRIVATE_KEY)  # pylint: disable=no-value-for-parameter
-                contract = evm_client.get_contract(
-                    name='PolygonZkEVMBridge',
-                    address=get_polygon_zkevm_bridge_deployment_address(step.conversion.destination_chain),
-                )
-
-                is_claimed = contract.functions.isClaimed(step.metadata['deposit_count']).call()
-                if is_claimed:
-                    step.status = TokenConversionStepStatus.SUCCESSFUL
-                    step.save()
-                    continue
-
-                send_to_recipient_fn_call = contract.functions.claimAsset(
-                    [to_bytes(hexstr=i) for i in step.metadata['merkle_proof']],
-                    step.metadata['deposit_count'],
-                    to_bytes(hexstr=step.metadata['main_exit_root']),
-                    to_bytes(hexstr=step.metadata['rollup_exit_root']),
-                    step.metadata['origin_network'],
-                    step.metadata['origin_address'],
-                    step.metadata['destination_network'],
-                    step.metadata['destination_address'],
-                    step.metadata['bridged_amount'],
-                    to_bytes(text=''),
-                )
-                unsigned_tx = send_to_recipient_fn_call.build_transaction(
-                    TxParams(
-                        {
-                            'from': deployer.address,
-                            'chainId': step.conversion.destination_chain.value,
-                        },
-                    ),
-                )
-                tx_hash = evm_client.publish_transaction(tx_params=unsigned_tx, sender=deployer)
-                step.status = TokenConversionStepStatus.SUCCESSFUL
-                step.metadata['tx_hash'] = tx_hash.hex()
-                step.save()
-        except Exception:
-            logger.exception('An error occurred while sending bridged asset to recipient for LxLy')
             continue

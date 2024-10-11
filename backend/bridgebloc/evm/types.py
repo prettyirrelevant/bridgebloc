@@ -4,15 +4,13 @@ from enum import IntEnum, unique
 @unique
 class ChainID(IntEnum):
     ETHEREUM = 1
-    ARBITRUM_ONE = 42161
     AVALANCHE = 43114
     POLYGON_POS = 137
-    POLYGON_ZKEVM = 1101
+    ARBITRUM_ONE = 42161
     ETHEREUM_TESTNET = 5
     ARBITRUM_ONE_TESTNET = 421613
     AVALANCHE_TESTNET = 43113
     POLYGON_POS_TESTNET = 80001
-    POLYGON_ZKEVM_TESTNET = 1442
 
     @classmethod
     def values(cls) -> list[int]:
@@ -54,23 +52,6 @@ class ChainID(IntEnum):
     def is_valid_cctp_chain(self) -> bool:
         try:
             self.to_cctp_domain()
-        except ValueError:
-            return False
-
-        return True
-
-    def to_lxly_domain(self) -> int:
-        if self in {ChainID.ETHEREUM, ChainID.ETHEREUM_TESTNET}:
-            return 0
-
-        if self in {ChainID.POLYGON_ZKEVM, ChainID.POLYGON_ZKEVM_TESTNET}:
-            return 1
-
-        raise ValueError(f'{self} is not supported by LxLy')
-
-    def is_valid_lxly_chain(self) -> bool:
-        try:
-            self.to_lxly_domain()
         except ValueError:
             return False
 

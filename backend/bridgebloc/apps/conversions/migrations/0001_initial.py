@@ -30,12 +30,10 @@ class Migration(migrations.Migration):
                             (42161, 'Arbitrum One'),
                             (43114, 'Avalanche'),
                             (137, 'Polygon Pos'),
-                            (1101, 'Polygon Zkevm'),
                             (5, 'Ethereum Testnet'),
                             (421613, 'Arbitrum One Testnet'),
                             (43113, 'Avalanche Testnet'),
                             (80001, 'Polygon Pos Testnet'),
-                            (1442, 'Polygon Zkevm Testnet'),
                         ],
                         validators=[django.core.validators.MinValueValidator(1)],
                         verbose_name='source chain',
@@ -63,7 +61,7 @@ class Migration(migrations.Migration):
                 (
                     'conversion_type',
                     models.CharField(
-                        choices=[('cctp', 'Cctp'), ('lxly', 'Lxly'), ('circle_api', 'Circle Api')],
+                        choices=[('cctp', 'Cctp'), ('circle_api', 'Circle Api')],
                         max_length=150,
                         verbose_name='conversion type',
                     ),

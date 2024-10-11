@@ -4,7 +4,6 @@ from .views import (
     CCTPTokenConversionInitialisationAPIView,
     CircleAPITokenConversionInitialisationAPIView,
     CircleTokenConversionDepositTxHashUpdateAPIView,
-    LxLyTokenConversionInitialisationAPIView,
     TokenConversionAPIView,
     TokenConversionsAPIView,
     ValidTokenConversionRoutesAPIView,
@@ -23,7 +22,6 @@ urlpatterns = [
         name='add-deposit-tx-hash',
     ),
     path('conversions/cctp', CCTPTokenConversionInitialisationAPIView.as_view(), name='bridge-with-cctp'),
-    path('conversions/lxly', LxLyTokenConversionInitialisationAPIView.as_view(), name='bridge-with-lxly'),
     path('conversions/routes', ValidTokenConversionRoutesAPIView.as_view(), name='valid-routes'),
     path('conversions/<str:uuid>', TokenConversionAPIView.as_view(), name='get-conversion'),
 ]
