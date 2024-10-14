@@ -22,6 +22,7 @@ class TokenConversion(UUIDModel, TimestampedModel, models.Model):
     source_token = models.ForeignKey(
         'tokens.Token',
         verbose_name='source token',
+        related_name='source_conversions',
         on_delete=models.CASCADE,
         blank=False,
     )
@@ -34,6 +35,7 @@ class TokenConversion(UUIDModel, TimestampedModel, models.Model):
     destination_token = models.ForeignKey(
         'tokens.Token',
         verbose_name='destination token',
+        related_name='destination_conversions',
         on_delete=models.CASCADE,
         blank=False,
     )

@@ -4,12 +4,10 @@ from .views import (
     CCTPTokenConversionInitialisationAPIView,
     TokenConversionAPIView,
     TokenConversionsAPIView,
-    ValidTokenConversionRoutesAPIView,
 )
 
 urlpatterns = [
     path('conversions', TokenConversionsAPIView.as_view(), name='all-conversions-by-user'),
     path('conversions/cctp', CCTPTokenConversionInitialisationAPIView.as_view(), name='bridge-with-cctp'),
-    path('conversions/routes', ValidTokenConversionRoutesAPIView.as_view(), name='valid-routes'),
     path('conversions/<str:uuid>', TokenConversionAPIView.as_view(), name='get-conversion'),
 ]
