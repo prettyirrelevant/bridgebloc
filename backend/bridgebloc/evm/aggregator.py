@@ -9,8 +9,6 @@ from bridgebloc.evm.types import ChainID
 class EVMAggregatorConfig:  # pylint:disable=too-many-instance-attributes
     ethereum_endpoints: list[str]
     ethereum_testnet_endpoints: list[str]
-    avalanche_endpoints: list[str]
-    avalanche_testnet_endpoints: list[str]
     arbitrum_one_endpoints: list[str]
     arbitrum_one_testnet_endpoints: list[str]
     base_endpoints: list[str]

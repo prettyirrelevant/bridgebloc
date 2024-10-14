@@ -7,11 +7,9 @@ class ChainID(IntEnum):
     ETHEREUM = 1
     OPTIMISM = 10
     POLYGON_POS = 137
-    AVALANCHE = 43114
     BASE_TESTNET = 84532
     ARBITRUM_ONE = 42161
     ETHEREUM_TESTNET = 5
-    AVALANCHE_TESTNET = 43113
     POLYGON_POS_TESTNET = 80001
     OPTIMISM_TESTNET = 11155420
     ARBITRUM_ONE_TESTNET = 421613
@@ -47,9 +45,6 @@ class ChainID(IntEnum):
     def to_cctp_domain(self) -> int:
         if self in {ChainID.ETHEREUM, ChainID.ETHEREUM_TESTNET}:
             return 0
-
-        if self in {ChainID.AVALANCHE, ChainID.AVALANCHE_TESTNET}:
-            return 1
 
         if self in {ChainID.ARBITRUM_ONE, ChainID.ARBITRUM_ONE_TESTNET}:
             return 3

@@ -180,6 +180,7 @@ dev = [
     { name = "pytest-django" },
     { name = "pytest-sugar" },
     { name = "ruff" },
+    { name = "setuptools" },
 ]
 
 [package.metadata]
@@ -217,6 +218,7 @@ dev = [
     { name = "pytest-django", specifier = "==4.5.2" },
     { name = "pytest-sugar", specifier = "==0.9.7" },
     { name = "ruff", specifier = "==0.0.282" },
+    { name = "setuptools", specifier = ">=75.1.0" },
 ]
 
 [[package]]
@@ -1555,6 +1557,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/8d/b73616c8d5619a62495a988e50e8a808e29bc33bc9626c84864c007cca50/ruff-0.0.282-py3-none-win32.whl", hash = "sha256:f51bbb64f8f29e444c16d21b269ba82e25f8d536beda3df7c9fe1816297e508e", size = 5194657 },
     { url = "https://files.pythonhosted.org/packages/91/c4/5cd1b703f12a5182a33991ea3118b8cd714e0494211aa5ab1ec4f3cff8cc/ruff-0.0.282-py3-none-win_amd64.whl", hash = "sha256:bd25085c42ebaffe336ed7bda8a0ae7b6c454a5f386ec8b2299503f79bd12bdf", size = 5503727 },
     { url = "https://files.pythonhosted.org/packages/54/c6/b5365616c1565297887e59f1a4dc48598e256cb1b2f78abf499e1cac998d/ruff-0.0.282-py3-none-win_arm64.whl", hash = "sha256:f03fba9621533d67d7ab995847467d78b9337e3697779ef2cea6f1deaee5fbef", size = 5311363 },
+]
+
+[[package]]
+name = "setuptools"
+version = "75.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/b8/f21073fde99492b33ca357876430822e4800cdf522011f18041351dfa74b/setuptools-75.1.0.tar.gz", hash = "sha256:d59a21b17a275fb872a9c3dae73963160ae079f1049ed956880cd7c09b120538", size = 1348057 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ff/ae/f19306b5a221f6a436d8f2238d5b80925004093fa3edea59835b514d9057/setuptools-75.1.0-py3-none-any.whl", hash = "sha256:35ab7fd3bcd95e6b7fd704e4a1539513edad446c097797f2985e0e4b960772f2", size = 1248506 },
 ]
 
 [[package]]

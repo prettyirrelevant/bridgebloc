@@ -37,7 +37,8 @@ dev-dependencies = [
     "pytest-sugar==0.9.7",
     "pylint-django==2.5.3",
     "pyinstrument==4.5.1",
-    "ipython==8.14.0"
+    "ipython==8.14.0",
+    "setuptools>=75.1.0",
 ]
 
 [tool.black]

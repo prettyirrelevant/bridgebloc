@@ -72,12 +72,11 @@ class Command(BaseCommand):
     def populate_testnet_tokens() -> None:
         """Populates testnet token data based on mainnet tokens."""
         testnet_data = {
-            ChainID.ETHEREUM_TESTNET: [('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', 'usd-coin')],
-            ChainID.ARBITRUM_ONE_TESTNET: [('0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63', 'usd-coin')],
-            ChainID.POLYGON_POS_TESTNET: [('0x0FA8781a83E46826621b3BC094Ea2A0212e71B23', 'usd-coin')],
-            ChainID.AVALANCHE_TESTNET: [('0x5425890298aed601595a70AB815c96711a31Bc65', 'usd-coin')],
             ChainID.BASE_TESTNET: [('0x036CbD53842c5426634e7929541eC2318f3dCF7e', 'usd-coin')],
+            ChainID.ETHEREUM_TESTNET: [('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', 'usd-coin')],
             ChainID.OPTIMISM_TESTNET: [('0x5fd84259d66Cd46123540766Be93DFE6D43130D7', 'usd-coin')],
+            ChainID.POLYGON_POS_TESTNET: [('0x0FA8781a83E46826621b3BC094Ea2A0212e71B23', 'usd-coin')],
+            ChainID.ARBITRUM_ONE_TESTNET: [('0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63', 'usd-coin')],
         }
 
         testnet_tokens = [
