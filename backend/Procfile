@@ -1,3 +1,2 @@
-web: gunicorn bridgebloc.conf.wsgi --capture-output --log-level info --workers 2
-worker: python manage.py run_huey
+web: sh entrypoint.sh
 release: python manage.py migrate && python manage.py fetch_tokens
