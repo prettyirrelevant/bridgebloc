@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any
 
 from django.db import transaction
@@ -7,6 +8,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from bridgebloc.apps.accounts.permissions import IsAuthenticated
 from bridgebloc.common.helpers import success_response
@@ -17,6 +19,27 @@ from .models import TokenConversion, TokenConversionStep
 from .permissions import IsOwner
 from .serializers import CCTPTokenConversionInitialisationSerializer, TokenConversionSerializer
 from .types import ConversionMethod
+from ...evm.types import ChainID
+
+
+class ValidTokenConversionRoutesAPIView(APIView):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:  # noqa: ARG002
+        data: dict[str, Any] = defaultdict(lambda: defaultdict())  # pylint:disable=unnecessary-lambda
+
+        mainnet_chains = [chain for chain in ChainID if not chain.name.endswith('TESTNET')]
+        testnet_chains = [chain for chain in ChainID if chain.name.endswith('TESTNET')]
+
+        for source_chain in mainnet_chains:
+            for target_chain in mainnet_chains:
+                if source_chain != target_chain:
+                    data[source_chain.name.lower()][target_chain.name.lower()] = ConversionMethod.CCTP
+
+        for source_chain in testnet_chains:
+            for target_chain in testnet_chains:
+                if source_chain != target_chain:
+                    data[source_chain.name.lower()][target_chain.name.lower()] = ConversionMethod.CCTP
+
+        return success_response(data=data)
 
 
 class TokenConversionAPIView(RetrieveAPIView):
