@@ -77,9 +77,9 @@ class CCTPTokenConversionInitialisationAPIView(GenericAPIView):
 
         with transaction.atomic():
             conversion = TokenConversion.objects.create(
-                creator=request.user,
-                amount=serializer.validated_data['amount'],
                 conversion_type=ConversionMethod.CCTP,
+                creator=serializer.validated_data['from'],
+                amount=serializer.validated_data['amount'],
                 source_token=serializer.validated_data['source_token'],
                 source_chain=serializer.validated_data['source_chain'],
                 destination_chain=serializer.validated_data['destination_chain'],

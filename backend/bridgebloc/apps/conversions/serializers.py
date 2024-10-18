@@ -8,6 +8,7 @@ from web3.types import TxReceipt
 
 from rest_framework import serializers
 
+from bridgebloc.apps.accounts.models import Account
 from bridgebloc.apps.accounts.serializers import AccountSerializer
 from bridgebloc.apps.tokens.models import Token
 from bridgebloc.apps.tokens.serializers import TokenSerializer
@@ -20,6 +21,7 @@ from .models import TokenConversion, TokenConversionStep
 from .utils import get_cross_chain_bridge_deployment_address, get_token_messenger_deployment_address
 
 logger = logging.getLogger(__name__)
+
 
 class TokenConversionStepSerializer(serializers.ModelSerializer):
     class Meta:
@@ -125,14 +127,7 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
         if bridge_deposit_received_event['destinationChain'] != destination_chain.to_cctp_domain():
             raise serializers.ValidationError('cctp domain from event and serializer mismatch for destination chain')
 
-        if self.context['request'].user.address != to_checksum_address(bridge_deposit_received_event['from']):
-            raise serializers.ValidationError(
-                f'{bridge_deposit_received_event["from"]} does not match the authenticated user',
-            )
-
         try:
-            logger.info(f'source token:: {bridge_deposit_received_event["sourceToken"]}' )
-            logger.info(f'destination token:: {bridge_deposit_received_event["destinationToken"]} -- {bytes32_to_evm_address(bridge_deposit_received_event["destinationToken"])}')
             source_token = Token.objects.get(
                 chain_id=source_chain,
                 address=to_checksum_address(bridge_deposit_received_event['sourceToken']),
@@ -145,7 +140,11 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             raise serializers.ValidationError('Token is not supported currently') from e
 
         usdc_token = Token.objects.filter(symbol='usdc').first()
+        from_account, _ = Account.objects.get_or_create(
+            address=to_checksum_address(bridge_deposit_received_event['from']),
+        )
         return {
+            'from': from_account,
             'source_token': source_token,
             'source_chain': source_chain,
             'destination_token': destination_token,
@@ -153,6 +152,6 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             'nonce': bridge_deposit_received_event['nonce'],
             'message_bytes': found_message_sent_events[0].args.message.hex(),
             'message_hash': Web3.keccak(found_message_sent_events[0].args.message).hex(),
-            'destination_address': bytes32_to_evm_address(bridge_deposit_received_event['recipient']),
             'amount': usdc_token.convert_from_wei_to_token(bridge_deposit_received_event['amount']),  # type: ignore[union-attr] # noqa: E501
+            'destination_address': bytes32_to_evm_address(bridge_deposit_received_event['recipient']),
         }

@@ -75,8 +75,8 @@ class Command(BaseCommand):
             ChainID.BASE_TESTNET: [('0x036CbD53842c5426634e7929541eC2318f3dCF7e', 'usd-coin')],
             ChainID.ETHEREUM_TESTNET: [('0x07865c6E87B9F70255377e024ace6630C1Eaa37F', 'usd-coin')],
             ChainID.OPTIMISM_TESTNET: [('0x5fd84259d66Cd46123540766Be93DFE6D43130D7', 'usd-coin')],
-            ChainID.POLYGON_POS_TESTNET: [('0x0FA8781a83E46826621b3BC094Ea2A0212e71B23', 'usd-coin')],
-            ChainID.ARBITRUM_ONE_TESTNET: [('0xfd064A18f3BF249cf1f87FC203E90D8f650f2d63', 'usd-coin')],
+            ChainID.POLYGON_POS_TESTNET: [('0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582', 'usd-coin')],
+            ChainID.ARBITRUM_ONE_TESTNET: [('0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', 'usd-coin')],
         }
 
         testnet_tokens = [
