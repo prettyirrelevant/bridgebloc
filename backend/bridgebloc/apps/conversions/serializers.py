@@ -129,6 +129,8 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             )
 
         try:
+            print('source token:: ', bridge_deposit_received_event['sourceToken'])
+            print('destination token:: ', bridge_deposit_received_event['destinationToken'])
             source_token = Token.objects.get(
                 chain_id=source_chain,
                 address=to_checksum_address(bridge_deposit_received_event['sourceToken']),
