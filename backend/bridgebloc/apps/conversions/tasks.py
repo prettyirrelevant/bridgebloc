@@ -83,6 +83,7 @@ def cctp_send_token_to_recipient() -> None:
                     int(usdc_token.convert_from_token_to_wei(step.conversion.actual_amount)),  # type: ignore[union-attr]  # noqa: E501
                     step.conversion.destination_token.address,
                     step.conversion.destination_address,
+                    0,
                 )
                 unsigned_tx = send_to_recipient_fn_call.build_transaction(
                     TxParams(

@@ -2,23 +2,6 @@
     {
         "inputs": [
             {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "token",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint24",
-                        "name": "fee",
-                        "type": "uint24"
-                    }
-                ],
-                "internalType": "struct CrossChainBridge.SupportedToken[]",
-                "name": "_supportedTokens",
-                "type": "tuple[]"
-            },
-            {
                 "internalType": "address",
                 "name": "swapRouterAddr",
                 "type": "address"
@@ -39,9 +22,44 @@
                 "type": "address"
             },
             {
+                "internalType": "address",
+                "name": "swapFactory_",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "WETH_",
+                "type": "address"
+            },
+            {
                 "internalType": "uint32",
                 "name": "domain",
                 "type": "uint32"
+            },
+            {
+                "internalType": "uint24",
+                "name": "WETH_USDC_SWAP_FEE_",
+                "type": "uint24"
+            },
+            {
+                "internalType": "uint32[]",
+                "name": "destinationDomains",
+                "type": "uint32[]"
+            },
+            {
+                "internalType": "enum CrossChainBridge.ChainType[]",
+                "name": "chainTypes",
+                "type": "uint8[]"
+            },
+            {
+                "internalType": "uint32[]",
+                "name": "tokenDomains",
+                "type": "uint32[]"
+            },
+            {
+                "internalType": "bytes32[]",
+                "name": "destinationTokens",
+                "type": "bytes32[]"
             }
         ],
         "stateMutability": "nonpayable",
@@ -58,9 +76,9 @@
             },
             {
                 "indexed": true,
-                "internalType": "address",
+                "internalType": "bytes32",
                 "name": "recipient",
-                "type": "address"
+                "type": "bytes32"
             },
             {
                 "indexed": false,
@@ -94,9 +112,9 @@
             },
             {
                 "indexed": false,
-                "internalType": "address",
+                "internalType": "bytes32",
                 "name": "destinationToken",
-                "type": "address"
+                "type": "bytes32"
             }
         ],
         "name": "BridgeDepositReceived",
@@ -112,7 +130,7 @@
                 "type": "address"
             },
             {
-                "indexed": false,
+                "indexed": true,
                 "internalType": "uint64",
                 "name": "nonce",
                 "type": "uint64"
@@ -134,6 +152,95 @@
         "type": "event"
     },
     {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "enum CrossChainBridge.ChainType",
+                "name": "chainType",
+                "type": "uint8"
+            }
+        ],
+        "name": "DestinationChainAdded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
+            }
+        ],
+        "name": "DestinationChainRemoved",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "token",
+                "type": "bytes32"
+            }
+        ],
+        "name": "DestinationTokenAdded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "token",
+                "type": "bytes32"
+            }
+        ],
+        "name": "DestinationTokenRemoved",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
         "inputs": [],
         "name": "CCTP_DOMAIN",
         "outputs": [
@@ -147,14 +254,45 @@
         "type": "function"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "WETH",
+        "outputs": [
             {
                 "internalType": "address",
-                "name": "_admin",
+                "name": "",
                 "type": "address"
             }
         ],
-        "name": "addAdmin",
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "WETH_USDC_SWAP_FEE",
+        "outputs": [
+            {
+                "internalType": "uint24",
+                "name": "",
+                "type": "uint24"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
+            },
+            {
+                "internalType": "enum CrossChainBridge.ChainType",
+                "name": "chainType",
+                "type": "uint8"
+            }
+        ],
+        "name": "addDestinationChain",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -162,17 +300,17 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
             },
             {
-                "internalType": "uint24",
-                "name": "fee",
-                "type": "uint24"
+                "internalType": "bytes32",
+                "name": "token",
+                "type": "bytes32"
             }
         ],
-        "name": "addToken",
+        "name": "addDestinationToken",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -212,25 +350,6 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "name": "bridgeAdmins",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
                 "internalType": "bytes32",
                 "name": "_buf",
                 "type": "bytes32"
@@ -260,9 +379,14 @@
                 "type": "address"
             },
             {
-                "internalType": "address",
+                "internalType": "uint24",
+                "name": "fee",
+                "type": "uint24"
+            },
+            {
+                "internalType": "bytes32",
                 "name": "destinationToken",
-                "type": "address"
+                "type": "bytes32"
             },
             {
                 "internalType": "uint32",
@@ -270,14 +394,14 @@
                 "type": "uint32"
             },
             {
-                "internalType": "address",
+                "internalType": "bytes32",
                 "name": "recipient",
-                "type": "address"
+                "type": "bytes32"
             },
             {
-                "internalType": "address",
+                "internalType": "bytes32",
                 "name": "destinationContract",
-                "type": "address"
+                "type": "bytes32"
             }
         ],
         "name": "deposit",
@@ -288,7 +412,31 @@
                 "type": "uint64"
             }
         ],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "uint24",
+                "name": "paymentTokenSwapFee",
+                "type": "uint24"
+            }
+        ],
+        "name": "isSupportedToken",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -305,14 +453,27 @@
         "type": "function"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
             {
                 "internalType": "address",
-                "name": "_admin",
+                "name": "",
                 "type": "address"
             }
         ],
-        "name": "removeAdmin",
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
+            }
+        ],
+        "name": "removeDestinationChain",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -320,12 +481,24 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "_token",
-                "type": "address"
+                "internalType": "uint32",
+                "name": "domainId",
+                "type": "uint32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "token",
+                "type": "bytes32"
             }
         ],
-        "name": "removeToken",
+        "name": "removeDestinationToken",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -361,6 +534,11 @@
                 "internalType": "address",
                 "name": "recipientAddress",
                 "type": "address"
+            },
+            {
+                "internalType": "uint24",
+                "name": "fee",
+                "type": "uint24"
             }
         ],
         "name": "sendToRecipient",
@@ -371,22 +549,72 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "name": "supportedTokens",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-            },
-            {
                 "internalType": "uint24",
                 "name": "fee",
                 "type": "uint24"
+            }
+        ],
+        "name": "setWethUsdcSwapFee",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "name": "supportedDestinationChains",
+        "outputs": [
+            {
+                "internalType": "enum CrossChainBridge.ChainType",
+                "name": "chainType",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bool",
+                "name": "isSupported",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "name": "supportedDestinationTokens",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "swapFactory",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -419,6 +647,19 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "usdcToken",
         "outputs": [
@@ -429,6 +670,19 @@
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "withdraw",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     }
 ]
