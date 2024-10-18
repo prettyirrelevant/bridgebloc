@@ -1,5 +1,6 @@
-from typing import Any
 import logging
+from typing import Any
+
 from eth_utils.address import to_checksum_address
 from web3 import Web3
 from web3.logs import DISCARD
@@ -130,8 +131,8 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             )
 
         try:
-            logger.info(f'source token:: {bridge_deposit_received_event["sourceToken"]}', )
-            logger.info(f'destination token:: {bridge_deposit_received_event['destinationToken']} -- {bytes32_to_evm_address(bridge_deposit_received_event['destinationToken'])}')
+            logger.info(f'source token:: {bridge_deposit_received_event["sourceToken"]}' )
+            logger.info(f'destination token:: {bridge_deposit_received_event["destinationToken"]} -- {bytes32_to_evm_address(bridge_deposit_received_event["destinationToken"])}')
             source_token = Token.objects.get(
                 chain_id=source_chain,
                 address=to_checksum_address(bridge_deposit_received_event['sourceToken']),
