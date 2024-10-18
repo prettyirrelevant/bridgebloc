@@ -1,5 +1,5 @@
 from typing import Any
-
+import logging
 from eth_utils.address import to_checksum_address
 from web3 import Web3
 from web3.logs import DISCARD
@@ -18,6 +18,7 @@ from bridgebloc.evm.utils import bytes32_to_evm_address
 from .models import TokenConversion, TokenConversionStep
 from .utils import get_cross_chain_bridge_deployment_address, get_token_messenger_deployment_address
 
+logger = logging.getLogger(__name__)
 
 class TokenConversionStepSerializer(serializers.ModelSerializer):
     class Meta:
@@ -129,8 +130,8 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             )
 
         try:
-            print('source token:: ', bridge_deposit_received_event['sourceToken'])
-            print('destination token:: ', bridge_deposit_received_event['destinationToken'])
+            logger.info(f'source token:: {bridge_deposit_received_event["sourceToken"]}', )
+            logger.info(f'destination token:: {bridge_deposit_received_event['destinationToken']} -- {bytes32_to_evm_address(bridge_deposit_received_event['destinationToken'])}')
             source_token = Token.objects.get(
                 chain_id=source_chain,
                 address=to_checksum_address(bridge_deposit_received_event['sourceToken']),
