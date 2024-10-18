@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "biome format --write .",
+    "lint:fix": "biome lint --write ."
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.0.10",
@@ -26,10 +28,11 @@
     "react-use": "^17.4.0",
     "sass": "^1.66.1",
     "util": "^0.12.4",
-    "viem": "~0.3.36",
-    "wagmi": "^1.0.6"
+    "viem": "1",
+    "wagmi": "1.4.13"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.3",
     "@vitejs/plugin-react": "^4.0.0",
