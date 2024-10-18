@@ -13,13 +13,13 @@ from rest_framework.views import APIView
 from bridgebloc.apps.accounts.permissions import IsAuthenticated
 from bridgebloc.common.helpers import success_response
 from bridgebloc.common.types import AuthenticatedRequest
+from bridgebloc.evm.types import ChainID
 
 from .enums import CCTPConversionStepType, TokenConversionStepStatus
 from .models import TokenConversion, TokenConversionStep
 from .permissions import IsOwner
 from .serializers import CCTPTokenConversionInitialisationSerializer, TokenConversionSerializer
 from .types import ConversionMethod
-from ...evm.types import ChainID
 
 
 class ValidTokenConversionRoutesAPIView(APIView):

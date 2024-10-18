@@ -2,9 +2,9 @@ from django.urls import path
 
 from .views import (
     CCTPTokenConversionInitialisationAPIView,
-    ValidTokenConversionRoutesAPIView,
     TokenConversionAPIView,
     TokenConversionsAPIView,
+    ValidTokenConversionRoutesAPIView,
 )
 
 urlpatterns = [

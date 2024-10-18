@@ -13,6 +13,7 @@ from bridgebloc.apps.tokens.serializers import TokenSerializer
 from bridgebloc.evm.aggregator import EVMAggregator
 from bridgebloc.evm.client import EVMClient
 from bridgebloc.evm.types import ChainID
+from bridgebloc.evm.utils import bytes32_to_evm_address
 
 from .models import TokenConversion, TokenConversionStep
 from .utils import get_cross_chain_bridge_deployment_address, get_token_messenger_deployment_address
@@ -134,7 +135,7 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             )
             destination_token = Token.objects.get(
                 chain_id=destination_chain,
-                address=to_checksum_address(bridge_deposit_received_event['destinationToken']),
+                address=bytes32_to_evm_address(bridge_deposit_received_event['destinationToken']),
             )
         except Token.DoesNotExist as e:
             raise serializers.ValidationError('Token is not supported currently') from e
@@ -148,6 +149,6 @@ class CCTPTokenConversionInitialisationSerializer(serializers.Serializer):
             'nonce': bridge_deposit_received_event['nonce'],
             'message_bytes': found_message_sent_events[0].args.message.hex(),
             'message_hash': Web3.keccak(found_message_sent_events[0].args.message).hex(),
-            'destination_address': to_checksum_address(bridge_deposit_received_event['recipient']),
+            'destination_address': bytes32_to_evm_address(bridge_deposit_received_event['recipient']),
             'amount': usdc_token.convert_from_wei_to_token(bridge_deposit_received_event['amount']),  # type: ignore[union-attr] # noqa: E501
         }
