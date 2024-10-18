@@ -64,6 +64,7 @@ header {
       .wallet-connect-btn {
         @extend %body-14;
         @extend %row-middle;
+        font-family: $bricolageGrotesque;
         padding: 12px 20px;
         border-radius: 40px;
         color: var(--black);
