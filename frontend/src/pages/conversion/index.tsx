@@ -1,16 +1,16 @@
-import axios from "axios";
-import { useAccount } from "wagmi";
-import { useApp } from "context/AppContext";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import axios from 'axios';
+import { useAccount } from 'wagmi';
+import { useApp } from 'context/AppContext';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
-import CircleRoute from "./components/circleRoute";
-import ConversionDetails from "./conversionDetails";
-import CctpRoute from "./components/cctpRoute";
-import LxlyRoute from "./components/lxlyRoute";
+import CircleRoute from './components/circleRoute';
+import ConversionDetails from './conversionDetails';
+import CctpRoute from './components/cctpRoute';
+import LxlyRoute from './components/lxlyRoute';
 
 const Conversion = () => {
-  let { uuid } = useParams();
+  const { uuid } = useParams();
   const { address } = useAccount();
   const { authorization } = useApp();
 
@@ -20,7 +20,7 @@ const Conversion = () => {
     error: dataError,
     isLoading: dataLoading,
   } = useQuery(
-    ["conversion", uuid, authorization?.address, authorization?.signature],
+    ['conversion', uuid, authorization?.address, authorization?.signature],
     async () => {
       return await axios
         .get(`conversions/${uuid}`, {
@@ -28,7 +28,7 @@ const Conversion = () => {
             Authorization: `Signature ${authorization?.address}:${authorization?.signature}`,
           },
         })
-        .then(response => response?.data?.data);
+        .then((response) => response?.data?.data);
     },
     {
       refetchInterval: 30000,
@@ -36,7 +36,7 @@ const Conversion = () => {
         !!uuid &&
         authorization?.address === address &&
         !!authorization?.signature,
-    }
+    },
   );
 
   return (
@@ -52,20 +52,20 @@ const Conversion = () => {
 
           <ConversionDetails data={data} />
 
-          {data?.conversion_type === "circle_api" ? (
+          {data?.conversion_type === 'circle_api' ? (
             <CircleRoute
               data={data}
               refetch={refetch}
               dataError={dataError}
               dataLoading={dataLoading}
             />
-          ) : data?.conversion_type === "cctp" ? (
+          ) : data?.conversion_type === 'cctp' ? (
             <CctpRoute
               data={data}
               dataError={dataError}
               dataLoading={dataLoading}
             />
-          ) : data?.conversion_type === "lxly" ? (
+          ) : data?.conversion_type === 'lxly' ? (
             <LxlyRoute
               data={data}
               dataError={dataError}

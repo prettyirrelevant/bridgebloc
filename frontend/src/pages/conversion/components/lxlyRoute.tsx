@@ -1,8 +1,8 @@
-import { useMemo } from "react";
-import { BarLoader } from "react-spinners";
-import { CheckCircle } from "@phosphor-icons/react";
+import { useMemo } from 'react';
+import { BarLoader } from 'react-spinners';
+import { CheckCircle } from '@phosphor-icons/react';
 
-const processing = ["pending", "failed"];
+const processing = ['pending', 'failed'];
 
 interface LxlyRouteProps {
   data: any;
@@ -14,13 +14,13 @@ const LxlyRoute = ({ data, dataError, dataLoading }: LxlyRouteProps) => {
   const stepOne = useMemo(() => {
     return data?.conversion_steps
       ? data?.conversion_steps?.[0]?.status
-      : "pending";
+      : 'pending';
   }, [data]);
 
   const stepTwo = useMemo(() => {
     return data?.conversion_steps
-      ? data?.conversion_steps?.[1]?.status ?? "pending"
-      : "pending";
+      ? (data?.conversion_steps?.[1]?.status ?? 'pending')
+      : 'pending';
   }, [data]);
 
   return (
@@ -35,8 +35,8 @@ const LxlyRoute = ({ data, dataError, dataLoading }: LxlyRouteProps) => {
                 (processing.includes(stepOne)
                   ? 0
                   : processing.includes(stepTwo)
-                  ? 1
-                  : 2)
+                    ? 1
+                    : 2)
               }
               className="timeline-item"
             >
@@ -52,8 +52,8 @@ const LxlyRoute = ({ data, dataError, dataLoading }: LxlyRouteProps) => {
               processing.includes(stepOne)
                 ? 0
                 : processing.includes(stepTwo)
-                ? 1
-                : 2
+                  ? 1
+                  : 2
             }
           />
         </div>
@@ -70,14 +70,14 @@ const LxlyRoute = ({ data, dataError, dataLoading }: LxlyRouteProps) => {
                 <>Fetching transaction details</>
               )}
             </p>
-            {dataLoading && <BarLoader color={"#999"} />}
+            {dataLoading && <BarLoader color={'#999'} />}
           </div>
         ) : (
           <>
             {processing.includes(stepOne) ? (
               <div className="step-message">
                 <p className="title">Fetching Merkle Proof...</p>
-                <BarLoader color={"#999"} />
+                <BarLoader color={'#999'} />
               </div>
             ) : processing.includes(stepTwo) ? (
               <div className="step-message">
@@ -91,7 +91,7 @@ const LxlyRoute = ({ data, dataError, dataLoading }: LxlyRouteProps) => {
                   <br />
                   Might take a while... ⏳
                 </p>
-                <BarLoader color={"#999"} />
+                <BarLoader color={'#999'} />
               </div>
             ) : (
               <>
@@ -99,19 +99,19 @@ const LxlyRoute = ({ data, dataError, dataLoading }: LxlyRouteProps) => {
                   className="step-message"
                   style={{
                     gap: 7,
-                    padding: "0px",
+                    padding: '0px',
                   }}
                 >
                   <div
                     style={{
                       gap: 7,
-                      flexDirection: "row",
+                      flexDirection: 'row',
                     }}
                   >
                     <p
                       className="title"
                       style={{
-                        fontSize: "18px",
+                        fontSize: '18px',
                       }}
                     >
                       Successful

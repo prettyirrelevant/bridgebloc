@@ -1,12 +1,12 @@
-import { useEffect, RefObject } from "react";
+import { useEffect, type RefObject } from 'react';
 
 function useClickOut(
   refs: RefObject<HTMLElement>[],
-  callback: () => void
+  callback: () => void,
 ): void {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent): void {
-      const isClickOutside = refs.every(ref => {
+      const isClickOutside = refs.every((ref) => {
         return ref.current && !ref.current.contains(event.target as Node);
       });
 
@@ -15,10 +15,10 @@ function useClickOut(
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [refs, callback]);
 }

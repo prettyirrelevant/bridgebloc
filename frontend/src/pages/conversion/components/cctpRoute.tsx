@@ -1,8 +1,8 @@
-import { useMemo } from "react";
-import { BarLoader } from "react-spinners";
-import { CheckCircle } from "@phosphor-icons/react";
+import { useMemo } from 'react';
+import { BarLoader } from 'react-spinners';
+import { CheckCircle } from '@phosphor-icons/react';
 
-const processing = ["pending", "failed"];
+const processing = ['pending', 'failed'];
 
 interface CctpRouteProps {
   data: any;
@@ -14,13 +14,13 @@ const CctpRoute = ({ data, dataError, dataLoading }: CctpRouteProps) => {
   const stepOne = useMemo(() => {
     return data?.conversion_steps
       ? data?.conversion_steps?.[0]?.status
-      : "pending";
+      : 'pending';
   }, [data]);
 
   const stepTwo = useMemo(() => {
     return data?.conversion_steps
-      ? data?.conversion_steps?.[1]?.status ?? "pending"
-      : "pending";
+      ? (data?.conversion_steps?.[1]?.status ?? 'pending')
+      : 'pending';
   }, [data]);
 
   return (
@@ -35,8 +35,8 @@ const CctpRoute = ({ data, dataError, dataLoading }: CctpRouteProps) => {
                 (processing.includes(stepOne)
                   ? 0
                   : processing.includes(stepTwo)
-                  ? 1
-                  : 2)
+                    ? 1
+                    : 2)
               }
               className="timeline-item"
             >
@@ -52,8 +52,8 @@ const CctpRoute = ({ data, dataError, dataLoading }: CctpRouteProps) => {
               processing.includes(stepOne)
                 ? 0
                 : processing.includes(stepTwo)
-                ? 1
-                : 2
+                  ? 1
+                  : 2
             }
           />
         </div>
@@ -70,7 +70,7 @@ const CctpRoute = ({ data, dataError, dataLoading }: CctpRouteProps) => {
                 <>Fetching transaction details</>
               )}
             </p>
-            {dataLoading && <BarLoader color={"#999"} />}
+            {dataLoading && <BarLoader color={'#999'} />}
           </div>
         ) : (
           <>
@@ -79,7 +79,7 @@ const CctpRoute = ({ data, dataError, dataLoading }: CctpRouteProps) => {
                 <p className="title">
                   Waiting for confirmation from attestation service
                 </p>
-                <BarLoader color={"#999"} />
+                <BarLoader color={'#999'} />
               </div>
             ) : processing.includes(stepTwo) ? (
               <div className="step-message">
@@ -93,7 +93,7 @@ const CctpRoute = ({ data, dataError, dataLoading }: CctpRouteProps) => {
                   <br />
                   Might take a while... ⏳
                 </p>
-                <BarLoader color={"#999"} />
+                <BarLoader color={'#999'} />
               </div>
             ) : (
               <>
@@ -101,19 +101,19 @@ const CctpRoute = ({ data, dataError, dataLoading }: CctpRouteProps) => {
                   className="step-message"
                   style={{
                     gap: 7,
-                    padding: "0px",
+                    padding: '0px',
                   }}
                 >
                   <div
                     style={{
                       gap: 7,
-                      flexDirection: "row",
+                      flexDirection: 'row',
                     }}
                   >
                     <p
                       className="title"
                       style={{
-                        fontSize: "18px",
+                        fontSize: '18px',
                       }}
                     >
                       Successful

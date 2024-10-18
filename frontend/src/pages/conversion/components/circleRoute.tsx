@@ -1,18 +1,18 @@
-import axios from "axios";
-import { useMemo } from "react";
-import { useApp } from "context/AppContext";
-import { useParams } from "react-router-dom";
-import { CheckCircle } from "@phosphor-icons/react";
-import { BarLoader, ClipLoader } from "react-spinners";
-import { erc20ABI, useNetwork, useSwitchNetwork } from "wagmi";
+import axios from 'axios';
+import { useMemo } from 'react';
+import { useApp } from 'context/AppContext';
+import { useParams } from 'react-router-dom';
+import { CheckCircle } from '@phosphor-icons/react';
+import { BarLoader, ClipLoader } from 'react-spinners';
+import { erc20ABI, useNetwork, useSwitchNetwork } from 'wagmi';
 import {
   useAccount,
   useSignMessage,
   useContractWrite,
   usePrepareContractWrite,
-} from "wagmi";
+} from 'wagmi';
 
-const processing = ["pending", "failed"];
+const processing = ['pending', 'failed'];
 
 interface CircleRouteProps {
   data: any;
@@ -27,7 +27,7 @@ const CircleRoute = ({
   dataError,
   dataLoading,
 }: CircleRouteProps) => {
-  let { uuid } = useParams();
+  const { uuid } = useParams();
   const { chain } = useNetwork();
   const { address } = useAccount();
   const { switchNetworkAsync } = useSwitchNetwork();
@@ -36,18 +36,18 @@ const CircleRoute = ({
   // Sign message to verify address
   const { signMessageAsync, isLoading } = useSignMessage({
     message:
-      "Message: Welcome to BridgeBloc!\nURI: https://bridgebloc.vercel.app",
+      'Message: Welcome to BridgeBloc!\nURI: https://bridgebloc.vercel.app',
   });
 
   // Prepare txn object to transfer to deposit address
   const { config } = usePrepareContractWrite({
     abi: erc20ABI,
-    functionName: "transfer",
+    functionName: 'transfer',
     args: [
       data?.conversion_steps?.[0]?.metadata?.paymentMethods?.[0]?.address,
       BigInt(
         Number(data?.amount ?? 0) *
-          Math.pow(10, Number(data?.source_token?.decimals ?? 0))
+          Math.pow(10, Number(data?.source_token?.decimals ?? 0)),
       ),
     ],
     chainId: data?.source_chain,
@@ -72,7 +72,7 @@ const CircleRoute = ({
             headers: {
               Authorization: `Signature ${address}:${signature}`,
             },
-          }
+          },
         );
 
       refetch();
@@ -110,27 +110,27 @@ const CircleRoute = ({
   const stepOne = useMemo(() => {
     return data?.conversion_steps
       ? data?.conversion_steps?.[0]?.status
-      : "pending";
+      : 'pending';
   }, [data]);
 
   const stepTwo = useMemo(() => {
     return data?.conversion_steps
       ? data?.conversion_steps?.[1]?.metadata?.deposit_tx_hash
-        ? "success"
-        : "pending"
-      : "pending";
+        ? 'success'
+        : 'pending'
+      : 'pending';
   }, [data]);
 
   const stepThree = useMemo(() => {
     return data?.conversion_steps
       ? data?.conversion_steps?.[1]?.status
-      : "pending";
+      : 'pending';
   }, [data]);
 
   const finalStep = useMemo(() => {
     return data?.conversion_steps
-      ? data?.conversion_steps?.[2]?.status ?? "pending"
-      : "pending";
+      ? (data?.conversion_steps?.[2]?.status ?? 'pending')
+      : 'pending';
   }, [data]);
 
   return (
@@ -145,12 +145,12 @@ const CircleRoute = ({
                 (processing.includes(stepOne)
                   ? 0
                   : processing.includes(stepTwo)
-                  ? 1
-                  : processing.includes(stepThree)
-                  ? 2
-                  : processing.includes(finalStep)
-                  ? 3
-                  : 4)
+                    ? 1
+                    : processing.includes(stepThree)
+                      ? 2
+                      : processing.includes(finalStep)
+                        ? 3
+                        : 4)
               }
               className="timeline-item"
             >
@@ -166,12 +166,12 @@ const CircleRoute = ({
               processing.includes(stepOne)
                 ? 0
                 : processing.includes(stepTwo)
-                ? 1
-                : processing.includes(stepThree)
-                ? 2
-                : processing.includes(finalStep)
-                ? 3
-                : 4
+                  ? 1
+                  : processing.includes(stepThree)
+                    ? 2
+                    : processing.includes(finalStep)
+                      ? 3
+                      : 4
             }
           />
         </div>
@@ -188,7 +188,7 @@ const CircleRoute = ({
                 <>Fetching transaction details</>
               )}
             </p>
-            {dataLoading && <BarLoader color={"#999"} />}
+            {dataLoading && <BarLoader color={'#999'} />}
           </div>
         ) : (
           <>
@@ -197,27 +197,27 @@ const CircleRoute = ({
                 <p className="title">
                   Hold on! we are creating a deposit address
                 </p>
-                <BarLoader color={"#999"} />
+                <BarLoader color={'#999'} />
               </div>
             ) : processing.includes(stepTwo) ? (
               <button
                 className="primary-btn"
                 style={{
-                  marginTop: "20px",
+                  marginTop: '20px',
                 }}
                 onClick={() => startPayment()}
               >
                 Pay {data?.amount}
-                <span style={{ textTransform: "uppercase" }}>
-                  {data?.source_token?.symbol?.split("_").join(" ")}
+                <span style={{ textTransform: 'uppercase' }}>
+                  {data?.source_token?.symbol?.split('_').join(' ')}
                 </span>
                 {(loading || isLoading) && (
                   <ClipLoader
                     size={16}
-                    color={"#888"}
+                    color={'#888'}
                     cssOverride={{
                       right: 20,
-                      position: "absolute",
+                      position: 'absolute',
                     }}
                     aria-label="Loading Spinner"
                   />
@@ -235,7 +235,7 @@ const CircleRoute = ({
                   <br />
                   Might take a while... ⏳
                 </p>
-                <BarLoader color={"#999"} />
+                <BarLoader color={'#999'} />
               </div>
             ) : processing.includes(finalStep) ? (
               <div className="step-message">
@@ -247,7 +247,7 @@ const CircleRoute = ({
                 >
                   Sending funds to the receipient address
                 </p>
-                <BarLoader color={"#999"} />
+                <BarLoader color={'#999'} />
               </div>
             ) : (
               <>
@@ -255,19 +255,19 @@ const CircleRoute = ({
                   className="step-message"
                   style={{
                     gap: 7,
-                    padding: "0px",
+                    padding: '0px',
                   }}
                 >
                   <div
                     style={{
                       gap: 7,
-                      flexDirection: "row",
+                      flexDirection: 'row',
                     }}
                   >
                     <p
                       className="title"
                       style={{
-                        fontSize: "18px",
+                        fontSize: '18px',
                       }}
                     >
                       Successful

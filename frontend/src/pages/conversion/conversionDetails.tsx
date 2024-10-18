@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import { metadata } from "constants/data";
-import { capitalizeFirst } from "helpers/text";
-import dayjs from "dayjs";
+import { useMemo } from 'react';
+import { metadata } from 'constants/data';
+import { capitalizeFirst } from 'helpers/text';
+import dayjs from 'dayjs';
 
 interface ConversionDetailsProps {
   data: any;
@@ -11,16 +11,16 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
   const chainIcons = useMemo(() => {
     const selected = Object.values(metadata).filter(
       (item: any) =>
-        item.chain_id === data?.source_chain + "" ||
-        item.chain_id === data?.destination_chain + ""
+        item.chain_id === data?.source_chain + '' ||
+        item.chain_id === data?.destination_chain + '',
     );
 
     return {
       [data?.source_chain]: selected.find(
-        (item: any) => item.chain_id === data?.source_chain + ""
+        (item: any) => item.chain_id === data?.source_chain + '',
       ),
       [data?.destination_chain]: selected.find(
-        (item: any) => item.chain_id === data?.destination_chain + ""
+        (item: any) => item.chain_id === data?.destination_chain + '',
       ),
     };
   }, [data?.source_chain, data?.destination_chain]);
@@ -40,8 +40,8 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
           <p className="token-name">
             {capitalizeFirst(
               chainIcons?.[data?.source_chain]?.chain_name
-                ?.split("_")
-                .join(" ") ?? ""
+                ?.split('_')
+                .join(' ') ?? '',
             )}
           </p>
         </div>
@@ -60,8 +60,8 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
           <p className="token-name">
             {capitalizeFirst(
               chainIcons?.[data?.destination_chain]?.chain_name
-                ?.split("_")
-                .join(" ") ?? ""
+                ?.split('_')
+                .join(' ') ?? '',
             )}
           </p>
         </div>
@@ -80,10 +80,10 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
           <p
             className="token-name"
             style={{
-              textTransform: "uppercase",
+              textTransform: 'uppercase',
             }}
           >
-            {data?.source_token?.symbol?.split("_").join(" ")}
+            {data?.source_token?.symbol?.split('_').join(' ')}
           </p>
         </div>
       </div>
@@ -101,10 +101,10 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
           <p
             className="token-name"
             style={{
-              textTransform: "uppercase",
+              textTransform: 'uppercase',
             }}
           >
-            {data?.destination_token?.symbol?.split("_").join(" ")}
+            {data?.destination_token?.symbol?.split('_').join(' ')}
           </p>
         </div>
       </div>
@@ -116,10 +116,10 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
           <p
             className="token-name"
             style={{
-              textTransform: "uppercase",
+              textTransform: 'uppercase',
             }}
           >
-            {data?.amount} {data?.source_token?.symbol?.split("_").join(" ")}
+            {data?.amount} {data?.source_token?.symbol?.split('_').join(' ')}
           </p>
         </div>
       </div>
@@ -131,12 +131,12 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
           <p
             className="token-name"
             style={{
-              textTransform: "capitalize",
+              textTransform: 'capitalize',
             }}
           >
-            {data?.conversion_type === "cctp"
-              ? "CCTP"
-              : data?.conversion_type?.split("_").join(" ")}
+            {data?.conversion_type === 'cctp'
+              ? 'CCTP'
+              : data?.conversion_type?.split('_').join(' ')}
           </p>
         </div>
       </div>
@@ -148,13 +148,13 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
           <p
             className="token-name"
             style={{
-              textTransform: "capitalize",
+              textTransform: 'capitalize',
             }}
           >
             {isNaN(Date.parse(data?.created_at)) ? (
               <></>
             ) : (
-              dayjs(Date.parse(data?.created_at)).format("MMM DD, HH:mm")
+              dayjs(Date.parse(data?.created_at)).format('MMM DD, HH:mm')
             )}
           </p>
         </div>

@@ -1,16 +1,16 @@
-import axios from "axios";
-import { useAccount } from "wagmi";
-import { BarLoader } from "react-spinners";
-import { useApp } from "context/AppContext";
-import { useQuery } from "@tanstack/react-query";
-import ConversionListItem from "./conversionListItem";
+import axios from 'axios';
+import { useAccount } from 'wagmi';
+import { BarLoader } from 'react-spinners';
+import { useApp } from 'context/AppContext';
+import { useQuery } from '@tanstack/react-query';
+import ConversionListItem from './conversionListItem';
 
 const Conersions = () => {
   const { address } = useAccount();
   const { authorization } = useApp();
 
   const { data, error, isLoading } = useQuery(
-    ["conversions", authorization?.address, authorization?.signature],
+    ['conversions', authorization?.address, authorization?.signature],
     async () => {
       return await axios
         .get(`conversions`, {
@@ -18,11 +18,11 @@ const Conersions = () => {
             Authorization: `Signature ${authorization?.address}:${authorization?.signature}`,
           },
         })
-        .then(response => response?.data?.data);
+        .then((response) => response?.data?.data);
     },
     {
       enabled: authorization?.address === address && !!authorization?.signature,
-    }
+    },
   );
 
   return (
@@ -46,7 +46,7 @@ const Conersions = () => {
                       <>Fetching conversions</>
                     )}
                   </p>
-                  {isLoading && <BarLoader color={"#999"} />}
+                  {isLoading && <BarLoader color={'#999'} />}
                 </div>
               </>
             ) : (

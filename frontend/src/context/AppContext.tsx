@@ -1,17 +1,17 @@
 import {
   useMemo,
-  Dispatch,
+  type Dispatch,
   useState,
-  ReactNode,
+  type ReactNode,
   useEffect,
   useContext,
-  ReactElement,
+  type ReactElement,
   createContext,
-  SetStateAction,
-} from "react";
-import axios from "axios";
-import { useAccount, useQuery } from "wagmi";
-import { metadata, tokens } from "constants/data";
+  type SetStateAction,
+} from 'react';
+import axios from 'axios';
+import { useAccount, useQuery } from 'wagmi';
+import { metadata, tokens } from 'constants/data';
 
 interface AppProviderProps {
   children: ReactElement | ReactElement[] | ReactNode;
@@ -57,91 +57,93 @@ export type QuotesPayload = {
 const AppProvider = ({ children }: AppProviderProps) => {
   const { address } = useAccount();
   const [authorization, setAuthorization] = useState({
-    address: "",
-    signature: "",
+    address: '',
+    signature: '',
   });
 
-  const [transferAmt, setTransferAmt] = useState("");
+  const [transferAmt, setTransferAmt] = useState('');
   const [currentRoute, setCurrentRoute] = useState<any>({});
   const [destinationToken, setDestinationToken] = useState<any>({});
-  const [currentChain, setCurrentChain] = useState("ethereum_testnet");
+  const [currentChain, setCurrentChain] = useState('base_testnet');
   const [currentToken, setCurrentToken] = useState<{
     [key: string]: string;
   }>({});
 
   useEffect(() => {
-    const auth = localStorage.getItem("authorization");
+    setCurrentRoute('cctp');
+
+    const auth = localStorage.getItem('authorization');
     if (auth) setAuthorization(JSON.parse(auth));
   }, []);
 
   useEffect(() => {
-    const auth = localStorage.getItem("authorization");
+    const auth = localStorage.getItem('authorization');
 
     if (auth) {
       if (
-        JSON.parse(auth ?? "")?.signature &&
-        address === (JSON.parse(auth ?? "")?.address as `0x${string}`)
+        JSON.parse(auth ?? '')?.signature &&
+        address === (JSON.parse(auth ?? '')?.address as `0x${string}`)
       ) {
         setAuthorization({
           address,
-          signature: JSON.parse(auth ?? "")?.signature,
+          signature: JSON.parse(auth ?? '')?.signature,
         });
       }
     } else
       setAuthorization({
-        address: "",
-        signature: "",
+        address: '',
+        signature: '',
       });
   }, [address]);
 
   useEffect(() => {
     if (authorization.address && authorization.signature)
-      localStorage.setItem("authorization", JSON.stringify(authorization));
+      localStorage.setItem('authorization', JSON.stringify(authorization));
   }, [authorization]);
 
   const conversions = useQuery(
-    ["tokens"],
+    ['tokens'],
     async () => {
       return await axios
-        .get("conversions/routes")
-        .then(response => response?.data?.data);
+        .get('conversions/routes')
+        .then((response) => response?.data?.data);
     },
     {
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
-    }
+    },
   );
 
   const routes = useMemo(() => {
     const routesArr = Object.keys(conversions.data || {});
     return routesArr
-      ?.filter(chain => chain.includes("testnet"))
-      ?.map(chain => {
+      ?.filter((chain) => chain.includes('testnet'))
+      ?.map((chain) => {
         return {
           chain,
-          image_url: metadata?.[chain]?.image_url ?? "",
+          image_url: metadata?.[chain]?.image_url ?? '',
         };
       });
   }, [conversions.data]);
 
   const chainRoutes = useMemo(() => {
     const routesArr = conversions.data?.[currentChain];
-    return Object.keys(routesArr || {}).map(chain => {
+    return Object.keys(routesArr || {}).map((chain) => {
       return {
         chain,
-        route: routesArr?.[chain] ?? "",
-        image_url: metadata?.[chain]?.image_url ?? "",
+        route: routesArr?.[chain] ?? '',
+        image_url: metadata?.[chain]?.image_url ?? '',
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChain]);
 
   const chainIcon = useMemo(() => {
-    return metadata?.[currentChain]?.image_url ?? "";
+    return metadata?.[currentChain]?.image_url ?? '';
   }, [currentChain]);
 
   const chainTokens = useMemo(() => {
-    return tokens.filter(token => token.chain_name === currentChain);
+    return tokens.filter((token) => token.chain_name === currentChain);
   }, [currentChain]);
 
   const receivedValue = useMemo(() => {
@@ -151,7 +153,7 @@ const AppProvider = ({ children }: AppProviderProps) => {
   }, [transferAmt]);
 
   const currentNetworkTokens = useMemo(() => {
-    return tokens.filter(token => token.chain_name === currentRoute?.chain);
+    return tokens.filter((token) => token.chain_name === currentRoute?.chain);
   }, [currentRoute]);
 
   return (

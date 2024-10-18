@@ -1,7 +1,7 @@
-import useAppMenu from "hooks/useAppMenu";
-import { ChevronDown } from "lucide-react";
-import { useApp } from "context/AppContext";
-import { capitalizeFirst } from "helpers/text";
+import useAppMenu from 'hooks/useAppMenu';
+import { ChevronDown } from 'lucide-react';
+import { useApp } from 'context/AppContext';
+import { capitalizeFirst } from 'helpers/text';
 
 const DestinationToken = () => {
   const { destinationToken, setDestinationToken, currentNetworkTokens } =
@@ -12,13 +12,13 @@ const DestinationToken = () => {
     isObject: true,
     setDefault: true,
     objectKeys: {
-      name: "symbol",
-      img: "image_url",
+      name: 'symbol',
+      img: 'image_url',
     },
     defaultOption: null,
     onOptionChange: (option: any) => {
       setDestinationToken(
-        currentNetworkTokens.find(token => token.symbol === option) ?? {}
+        currentNetworkTokens.find((token) => token.symbol === option) ?? {},
       );
     },
   });
@@ -31,7 +31,7 @@ const DestinationToken = () => {
         <div
           className="bridge-block__btn"
           style={{
-            cursor: "pointer",
+            cursor: 'pointer',
           }}
         >
           <div className="bridge-block__btn-token">
@@ -39,21 +39,21 @@ const DestinationToken = () => {
               {destinationToken?.image_url && (
                 <img
                   src={destinationToken?.image_url}
-                  alt={destinationToken?.symbol ?? "eth"}
+                  alt={destinationToken?.symbol ?? 'eth'}
                 />
               )}
             </div>
             <p
               className="token-name"
               style={{
-                textTransform: "uppercase",
+                textTransform: 'uppercase',
               }}
             >
               {destinationToken?.symbol
                 ? capitalizeFirst(
-                    destinationToken?.symbol?.split("_").join(" ")
+                    destinationToken?.symbol?.split('_').join(' '),
                   )
-                : ""}
+                : ''}
             </p>
           </div>
 

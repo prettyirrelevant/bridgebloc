@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
 interface AppModalProps {
   isCentered?: boolean;
@@ -13,16 +13,16 @@ const useAppModal = (defaultState = false, shouldNavigate = false): any[] => {
 
   const closeModal = () => {
     if (shouldNavigate) {
-      document.body.classList.remove("no-scroll");
+      document.body.classList.remove('no-scroll');
     } else {
       setIsOpen(false);
-      document.body.classList.remove("no-scroll");
+      document.body.classList.remove('no-scroll');
     }
   };
 
   const openModal = () => {
     setIsOpen(true);
-    document.body.classList.add("no-scroll");
+    document.body.classList.add('no-scroll');
   };
 
   const AppModal = ({
@@ -36,8 +36,8 @@ const useAppModal = (defaultState = false, shouldNavigate = false): any[] => {
           <>
             <div className="app-modal-overlay" onClick={closeModal}></div>
             <div
-              className={`app-modal ${isCentered ? "app-modal-centered" : ""} ${
-                modalClassname ?? ""
+              className={`app-modal ${isCentered ? 'app-modal-centered' : ''} ${
+                modalClassname ?? ''
               } `}
             >
               {children}

@@ -1,10 +1,10 @@
-import millify from "millify";
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
-import { metadata } from "constants/data";
-import ReactTimeAgo from "react-time-ago";
-import { Path } from "@phosphor-icons/react";
-import { capitalizeFirst } from "helpers/text";
+import millify from 'millify';
+import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { metadata } from 'constants/data';
+import ReactTimeAgo from 'react-time-ago';
+import { Path } from '@phosphor-icons/react';
+import { capitalizeFirst } from 'helpers/text';
 
 interface ConversionListItemProps {
   data: any;
@@ -14,16 +14,16 @@ const ConversionListItem = ({ data }: ConversionListItemProps) => {
   const chainIcons = useMemo(() => {
     const selected = Object.values(metadata).filter(
       (item: any) =>
-        item.chain_id === data?.source_chain + "" ||
-        item.chain_id === data?.destination_chain + ""
+        item.chain_id === data?.source_chain + '' ||
+        item.chain_id === data?.destination_chain + '',
     );
 
     return {
       [data?.source_chain]: selected.find(
-        (item: any) => item.chain_id === data?.source_chain + ""
+        (item: any) => item.chain_id === data?.source_chain + '',
       ),
       [data?.destination_chain]: selected.find(
-        (item: any) => item.chain_id === data?.destination_chain + ""
+        (item: any) => item.chain_id === data?.destination_chain + '',
       ),
     };
   }, [data?.source_chain, data?.destination_chain]);
@@ -55,8 +55,8 @@ const ConversionListItem = ({ data }: ConversionListItemProps) => {
           <p className="token-name">
             {capitalizeFirst(
               chainIcons?.[data?.source_chain]?.chain_name
-                ?.split("_")
-                .join(" ") ?? ""
+                ?.split('_')
+                .join(' ') ?? '',
             )}
           </p>
         </div>
@@ -71,8 +71,8 @@ const ConversionListItem = ({ data }: ConversionListItemProps) => {
           <p className="token-name">
             {capitalizeFirst(
               chainIcons?.[data?.destination_chain]?.chain_name
-                ?.split("_")
-                .join(" ") ?? ""
+                ?.split('_')
+                .join(' ') ?? '',
             )}
           </p>
         </div>
@@ -94,10 +94,10 @@ const ConversionListItem = ({ data }: ConversionListItemProps) => {
           <p
             className="token-name"
             style={{
-              textTransform: "uppercase",
+              textTransform: 'uppercase',
             }}
           >
-            {data?.source_token?.symbol?.split("_").join(" ")}
+            {data?.source_token?.symbol?.split('_').join(' ')}
           </p>
         </div>
 
@@ -111,10 +111,10 @@ const ConversionListItem = ({ data }: ConversionListItemProps) => {
           <p
             className="token-name"
             style={{
-              textTransform: "uppercase",
+              textTransform: 'uppercase',
             }}
           >
-            {data?.destination_token?.symbol?.split("_").join(" ")}
+            {data?.destination_token?.symbol?.split('_').join(' ')}
           </p>
         </div>
       </div>
@@ -123,18 +123,18 @@ const ConversionListItem = ({ data }: ConversionListItemProps) => {
         <div className="token">
           <p className="token-name">
             <Path size={16} />
-            {capitalizeFirst(data?.conversion_type?.split("_").join(" ") ?? "")}
+            {capitalizeFirst(data?.conversion_type?.split('_').join(' ') ?? '')}
           </p>
         </div>
 
         <p
           className={`indicator indicator-${
             data?.conversion_steps?.[data?.conversion_steps?.length - 1]
-              ?.status ?? "pending"
+              ?.status ?? 'pending'
           }`}
         >
           {data?.conversion_steps?.[data?.conversion_steps?.length - 1]
-            ?.status ?? "pending"}
+            ?.status ?? 'pending'}
         </p>
       </div>
     </Link>

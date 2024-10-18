@@ -11,4 +11,4 @@ export interface CollectionTableLabel {
   prefix?: { key?: string; className?: string };
 }
 
-export type Timeframes = "24h" | "7d" | "30d" | "All";
+export type Timeframes = '24h' | '7d' | '30d' | 'All';

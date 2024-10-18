@@ -1,14 +1,14 @@
-import { useAccount, useBalance, useConnect, useDisconnect } from "wagmi";
-import { Link } from "react-router-dom";
-import { ClipLoader } from "react-spinners";
-import { useApp } from "context/AppContext";
-import { Globe, LogOut } from "lucide-react";
-import AppLogo from "components/common/icons";
-import { useNetworkState } from "react-use";
-import { Swap } from "@phosphor-icons/react";
-import { constrictAddress } from "helpers/wallet";
+import { useAccount, useBalance, useConnect, useDisconnect } from 'wagmi';
+import { Link } from 'react-router-dom';
+import { ClipLoader } from 'react-spinners';
+import { useApp } from 'context/AppContext';
+import { Globe, LogOut } from 'lucide-react';
+import AppLogo from 'components/common/icons';
+import { useNetworkState } from 'react-use';
+import { Swap } from '@phosphor-icons/react';
+import { constrictAddress } from 'helpers/wallet';
 // @ts-ignore
-import avatar from "../../images/avatar.png";
+import avatar from '../../images/avatar.png';
 
 const Navbar = () => {
   const onlineState = useNetworkState();
@@ -24,7 +24,7 @@ const Navbar = () => {
   return (
     <header>
       <div className="header-content">
-        <Link to={"/"} className="header-content__logo">
+        <Link to={'/'} className="header-content__logo">
           <AppLogo size={130} />
         </Link>
 
@@ -32,7 +32,7 @@ const Navbar = () => {
           <>
             {isConnected ? (
               <>
-                <Link to={"/conversions"} className="menu-button auto">
+                <Link to={'/conversions'} className="menu-button auto">
                   <Swap size={18} />
                   <p>Conversions</p>
                 </Link>
@@ -41,7 +41,7 @@ const Navbar = () => {
                   <div
                     style={{
                       height: 20,
-                      position: "relative",
+                      position: 'relative',
                     }}
                   >
                     <Globe size={20} />
@@ -52,11 +52,11 @@ const Navbar = () => {
                         width: 12,
                         height: 12,
                         borderRadius: 10,
-                        position: "absolute",
+                        position: 'absolute',
                         backgroundColor: onlineState?.online
-                          ? "#28a745"
-                          : "#f00",
-                        border: "3px solid var(--white)",
+                          ? '#28a745'
+                          : '#f00',
+                        border: '3px solid var(--white)',
                       }}
                     />
                   </div>
@@ -66,10 +66,10 @@ const Navbar = () => {
                   className="menu-button"
                   onClick={() => {
                     disconnect();
-                    localStorage.removeItem("authorization");
+                    localStorage.removeItem('authorization');
                     setAuthorization({
-                      address: "",
-                      signature: "",
+                      address: '',
+                      signature: '',
                     });
                   }}
                 >
@@ -84,10 +84,10 @@ const Navbar = () => {
                     />
                   </div>
                   <div className="account-details__info">
-                    <p>{constrictAddress(address ?? "")}</p>
+                    <p>{constrictAddress(address ?? '')}</p>
                     {!loadingBalance && balance && (
                       <p className="ens">{`${Number(balance.formatted).toFixed(
-                        4
+                        4,
                       )} ${balance.symbol}`}</p>
                     )}
                   </div>
@@ -95,7 +95,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                {connectors.map(connector => (
+                {connectors.map((connector) => (
                   <button
                     key={connector.name}
                     onClick={() => {
@@ -108,7 +108,7 @@ const Navbar = () => {
                       <>
                         <ClipLoader
                           size={13}
-                          color={"#888"}
+                          color={'#888'}
                           cssOverride={{
                             marginLeft: 8,
                           }}

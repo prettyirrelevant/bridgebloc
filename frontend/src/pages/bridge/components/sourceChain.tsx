@@ -1,7 +1,7 @@
-import { useApp } from "context/AppContext";
-import { capitalizeFirst } from "helpers/text";
-import useAppMenu from "hooks/useAppMenu";
-import { ChevronDown } from "lucide-react";
+import { useApp } from 'context/AppContext';
+import { capitalizeFirst } from 'helpers/text';
+import useAppMenu from 'hooks/useAppMenu';
+import { ChevronDown } from 'lucide-react';
 
 const SourceChain = () => {
   const {
@@ -20,7 +20,7 @@ const SourceChain = () => {
     setDefault: true,
     defaultOption: routes[0],
     onOptionChange: (option: any) => {
-      setCurrentRoute("");
+      setCurrentRoute('');
       setCurrentToken({});
       setCurrentChain(option);
       setDestinationToken({});
@@ -36,12 +36,12 @@ const SourceChain = () => {
           <div className="bridge-block__btn-token">
             <div className="token-img">
               <img
-                src={chainIcon ?? "/images/avatar.png"}
-                alt={currentChain ?? "eth"}
+                src={chainIcon ?? '/images/avatar.png'}
+                alt={currentChain ?? 'eth'}
               />
             </div>
             <p className="token-name">
-              {capitalizeFirst(currentChain.split("_").join(" "))}
+              {capitalizeFirst(currentChain.split('_').join(' '))}
             </p>
           </div>
 

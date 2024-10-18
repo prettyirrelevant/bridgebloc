@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Menu, MenuItem } from "@szhsin/react-menu";
-import { capitalizeFirst } from "helpers/text";
-import { Check } from "lucide-react";
+import { useState } from 'react';
+import { Menu, MenuItem } from '@szhsin/react-menu';
+import { capitalizeFirst } from 'helpers/text';
+import { Check } from 'lucide-react';
 
 interface AppMenuProps {
   gap?: number;
   full?: boolean;
   capitals?: boolean;
   children: React.ReactNode;
-  align?: "start" | "center" | "end";
-  position?: "initial" | "auto" | "anchor";
-  viewScroll?: "initial" | "auto" | "close";
-  direction?: "top" | "bottom" | "left" | "right";
+  align?: 'start' | 'center' | 'end';
+  position?: 'initial' | 'auto' | 'anchor';
+  viewScroll?: 'initial' | 'auto' | 'close';
+  direction?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 interface useAppMenuProps {
@@ -34,8 +34,8 @@ const useAppMenu = ({
   setDefault = false,
   defaultOption,
   objectKeys = {
-    name: "chain",
-    img: "image_url",
+    name: 'chain',
+    img: 'image_url',
   },
   onOptionChange,
 }: useAppMenuProps) => {
@@ -44,17 +44,17 @@ const useAppMenu = ({
       ? isObject
         ? defaultOption?.[objectKeys.name]
         : defaultOption
-      : ""
+      : '',
   );
 
   const AppMenu = ({
     gap = 10,
     children,
     full = true,
-    align = "end",
-    direction = "bottom",
-    position = "anchor",
-    viewScroll = "auto",
+    align = 'end',
+    direction = 'bottom',
+    position = 'anchor',
+    viewScroll = 'auto',
     capitals = false,
   }: AppMenuProps) => {
     return (
@@ -68,10 +68,10 @@ const useAppMenu = ({
           position={position}
           direction={direction}
           viewScroll={viewScroll}
-          menuClassName={`app-menu__items ${items?.length === 0 ? "hide" : ""}`}
+          menuClassName={`app-menu__items ${items?.length === 0 ? 'hide' : ''}`}
           menuButton={children as any}
           className="app-menu__container"
-          onItemClick={e => {
+          onItemClick={(e) => {
             setActiveOption(isObject ? e.value?.[objectKeys.name] : e.value);
             onOptionChange &&
               onOptionChange(isObject ? e.value?.[objectKeys.name] : e.value);
@@ -92,7 +92,7 @@ const useAppMenu = ({
               {!isObject ? (
                 <p
                   style={{
-                    textTransform: capitals ? "uppercase" : "capitalize",
+                    textTransform: capitals ? 'uppercase' : 'capitalize',
                   }}
                 >
                   {slug}
@@ -101,16 +101,16 @@ const useAppMenu = ({
                 <>
                   <div className="option-details">
                     <img
-                      src={slug[objectKeys.img] || "/images/avatar.png"}
+                      src={slug[objectKeys.img] || '/images/avatar.png'}
                       alt="eth"
                     />
                     <p
                       style={{
-                        textTransform: capitals ? "uppercase" : "capitalize",
+                        textTransform: capitals ? 'uppercase' : 'capitalize',
                       }}
                     >
                       {capitalizeFirst(
-                        slug[objectKeys.name].split("_").join(" ")
+                        slug[objectKeys.name].split('_').join(' '),
                       )}
                     </p>
                   </div>

@@ -8,18 +8,20 @@ import {
   useSwitchNetwork,
   useContractWrite,
   usePrepareContractWrite,
-} from "wagmi";
-import axios from "axios";
-import { useMemo, useState } from "react";
-import { metadata } from "constants/data";
-import { useApp } from "context/AppContext";
-import { ClipLoader } from "react-spinners";
-import { useNetworkState } from "react-use";
-import { getDomain } from "helpers/contract";
-import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { crossChainBridgeAbi } from "contracts/index";
-import { networkContracts } from "contracts/addresses";
+} from 'wagmi';
+import { fromBytes, toBytes } from 'viem';
+import axios from 'axios';
+import { useMemo, useState } from 'react';
+import { metadata } from 'constants/data';
+import { useApp } from 'context/AppContext';
+import { ClipLoader } from 'react-spinners';
+import { useNetworkState } from 'react-use';
+import { getDomain } from 'helpers/contract';
+import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { crossChainBridgeAbi } from 'contracts/index';
+import { networkContracts } from 'contracts/addresses';
+import { evmAddressToBytes32 } from 'utils/address';
 
 interface ConversionPayload {
   address: string;
@@ -53,23 +55,23 @@ const CctpTxnBtn = () => {
 
   const { signMessageAsync, isLoading } = useSignMessage({
     message:
-      "Message: Welcome to BridgeBloc!\nURI: https://bridgebloc.vercel.app",
+      'Message: Welcome to BridgeBloc!\nURI: https://bridgebloc.vercel.app',
   });
 
-  const DEPOSIT_CONTRACT: `0x${string}` = useMemo(() => {
-    return networkContracts[currentChain] as `0x${string}`;
-  }, []);
+  const getDepositContract = () =>
+    networkContracts[currentChain] as `0x${string}`;
 
   /**
    * Prepare txn to approve allowance (max amount that can be spent)
    */
   const { config: approveConfig } = usePrepareContractWrite({
     abi: erc20ABI,
-    functionName: "approve",
+    functionName: 'approve',
     args: [
-      DEPOSIT_CONTRACT,
+      getDepositContract(),
       BigInt(
-        Number(transferAmt) * Math.pow(10, Number(currentToken?.decimals ?? 0))
+        Number(transferAmt ?? 0) *
+          Math.pow(10, Number(currentToken?.decimals ?? 0)),
       ),
     ],
     chainId: Number(metadata?.[currentChain]?.chain_id),
@@ -79,6 +81,7 @@ const CctpTxnBtn = () => {
       !isNaN(Number(transferAmt)) &&
       Number(transferAmt) > 0,
   });
+
   // Prompt user to set allowance
   const { isLoading: approving, writeAsync: approveAsync } =
     useContractWrite(approveConfig);
@@ -89,8 +92,8 @@ const CctpTxnBtn = () => {
   const { refetch: refetchApprovedAmount, data: approvedAmount } =
     useContractRead({
       abi: erc20ABI,
-      functionName: "allowance",
-      args: [address as `0x${string}`, DEPOSIT_CONTRACT],
+      functionName: 'allowance',
+      args: [address as `0x${string}`, getDepositContract()],
       chainId: Number(metadata?.[currentChain]?.chain_id),
       address: currentToken.address as `0x${string}`,
     });
@@ -100,24 +103,28 @@ const CctpTxnBtn = () => {
    */
   const { config } = usePrepareContractWrite({
     ...crossChainBridgeAbi,
-    functionName: "deposit",
+    functionName: 'deposit',
     args: [
       BigInt(
-        Number(transferAmt) * Math.pow(10, Number(currentToken?.decimals ?? 0))
+        Number(transferAmt) * Math.pow(10, Number(currentToken?.decimals ?? 0)),
       ),
       currentToken?.address as `0x${string}`,
-      destinationToken?.address as `0x${string}`,
+      0, // hardcoding fee here since it's testnet
+      evmAddressToBytes32(destinationToken?.address),
       getDomain(currentRoute?.chain) as number,
-      address as `0x${string}`,
-      DEPOSIT_CONTRACT,
+      evmAddressToBytes32(address),
+      evmAddressToBytes32(getDepositContract()),
     ],
     chainId: Number(metadata?.[currentChain]?.chain_id),
-    address: DEPOSIT_CONTRACT,
-    enabled:
-      !!currentToken?.address &&
-      !isNaN(Number(transferAmt)) &&
-      Number(transferAmt) > 0,
+    address: getDepositContract(),
+    enabled: false
+      // !!currentToken?.address &&
+      // address &&
+      // destinationToken?.address &&
+      // !isNaN(Number(transferAmt)) &&
+      // Number(transferAmt) > 0,
   });
+
   // Prompt user to approve tokens transfer txn
   const { writeAsync, isLoading: depositLoading } = useContractWrite(config);
 
@@ -132,9 +139,9 @@ const CctpTxnBtn = () => {
             Authorization: `Signature ${payload?.address}:${payload?.signature}`,
           },
         })
-        .then(response => response?.data?.data);
+        .then((response) => response?.data?.data);
     },
-    onSuccess: data => {
+    onSuccess: (data) => {
       navigate(`/conversion/${data?.id}`);
     },
   });
@@ -164,7 +171,7 @@ const CctpTxnBtn = () => {
     try {
       const authData = {
         address: authorization.address || address,
-        signature: authorization.signature || (await signMessageAsync()) || "",
+        signature: authorization.signature || (await signMessageAsync()) || '',
       };
 
       if (authData?.signature !== authorization?.signature)
@@ -180,7 +187,7 @@ const CctpTxnBtn = () => {
         Number(approvedAmount) <
         BigInt(
           Number(transferAmt) *
-            Math.pow(10, Number(currentToken?.decimals ?? 0))
+            Math.pow(10, Number(currentToken?.decimals ?? 0)),
         )
       ) {
         await approveAsync?.();
@@ -218,7 +225,7 @@ const CctpTxnBtn = () => {
     <button
       className="primary-btn"
       style={{
-        marginTop: "10px",
+        marginTop: '10px',
       }}
       onClick={processConversion}
     >
@@ -230,10 +237,10 @@ const CctpTxnBtn = () => {
         depositLoading) && (
         <ClipLoader
           size={16}
-          color={"#888"}
+          color={'#888'}
           cssOverride={{
             right: 20,
-            position: "absolute",
+            position: 'absolute',
           }}
           aria-label="Loading Spinner"
         />

@@ -1,7 +1,7 @@
-import { useApp } from "context/AppContext";
-import { capitalizeFirst } from "helpers/text";
-import useAppMenu from "hooks/useAppMenu";
-import { ChevronDown } from "lucide-react";
+import { useApp } from 'context/AppContext';
+import { capitalizeFirst } from 'helpers/text';
+import useAppMenu from 'hooks/useAppMenu';
+import { ChevronDown } from 'lucide-react';
 
 const DestinationChain = () => {
   const { chainRoutes, setCurrentRoute, currentRoute } = useApp();
@@ -12,7 +12,9 @@ const DestinationChain = () => {
     setDefault: true,
     defaultOption: currentRoute,
     onOptionChange: (option: any) => {
-      setCurrentRoute(chainRoutes.find(route => route.chain === option) ?? {});
+      setCurrentRoute(
+        chainRoutes.find((route) => route.chain === option) ?? {},
+      );
     },
   });
 
@@ -26,15 +28,15 @@ const DestinationChain = () => {
             <div className="token-img">
               {currentRoute?.image_url && (
                 <img
-                  src={currentRoute?.image_url ?? "/images/avatar.png"}
-                  alt={currentRoute?.chain ?? "eth"}
+                  src={currentRoute?.image_url ?? '/images/avatar.png'}
+                  alt={currentRoute?.chain ?? 'eth'}
                 />
               )}
             </div>
             <p className="token-name">
               {currentRoute?.chain
-                ? capitalizeFirst(currentRoute?.chain?.split("_").join(" "))
-                : "Select network"}
+                ? capitalizeFirst(currentRoute?.chain?.split('_').join(' '))
+                : 'Select network'}
             </p>
           </div>
 

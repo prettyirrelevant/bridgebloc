@@ -1,7 +1,7 @@
-import { useApp } from "context/AppContext";
-import { capitalizeFirst } from "helpers/text";
-import useAppMenu from "hooks/useAppMenu";
-import { ChevronDown } from "lucide-react";
+import { useApp } from 'context/AppContext';
+import { capitalizeFirst } from 'helpers/text';
+import useAppMenu from 'hooks/useAppMenu';
+import { ChevronDown } from 'lucide-react';
 
 const SourceToken = () => {
   const {
@@ -17,12 +17,14 @@ const SourceToken = () => {
     isObject: true,
     setDefault: true,
     objectKeys: {
-      name: "symbol",
-      img: "image_url",
+      name: 'symbol',
+      img: 'image_url',
     },
     defaultOption: null,
     onOptionChange: (option: any) => {
-      setCurrentToken(chainTokens.find(token => token.symbol === option) ?? {});
+      setCurrentToken(
+        chainTokens.find((token) => token.symbol === option) ?? {},
+      );
     },
   });
 
@@ -32,28 +34,28 @@ const SourceToken = () => {
 
       <div
         className={`bridge-block__btn ${
-          !currentToken?.symbol ? "full-width" : ""
+          !currentToken?.symbol ? 'full-width' : ''
         }`}
       >
         <AppMenu gap={18} align="center" capitals>
           <div
             className={`token-select ${
-              !currentToken?.symbol ? "full-width" : ""
+              !currentToken?.symbol ? 'full-width' : ''
             }`}
           >
             <div className="bridge-block__btn-token">
               <div className="token-img">
                 {currentToken?.image_url && (
                   <img
-                    src={currentToken?.image_url ?? "/images/avatar.png"}
-                    alt={currentToken?.symbol ?? "eth"}
+                    src={currentToken?.image_url ?? '/images/avatar.png'}
+                    alt={currentToken?.symbol ?? 'eth'}
                   />
                 )}
               </div>
               <p className="token-name">
                 {currentToken?.symbol
-                  ? capitalizeFirst(currentToken?.symbol?.split("_").join(" "))
-                  : ""}
+                  ? capitalizeFirst(currentToken?.symbol?.split('_').join(' '))
+                  : ''}
               </p>
             </div>
 
@@ -66,7 +68,7 @@ const SourceToken = () => {
             <input
               type="text"
               value={transferAmt}
-              onChange={e => {
+              onChange={(e) => {
                 const newValue = e.target.value;
                 if (/^\d*\.?\d*$/.test(newValue)) {
                   setTransferAmt(newValue);
