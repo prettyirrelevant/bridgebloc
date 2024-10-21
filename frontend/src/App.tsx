@@ -1,3 +1,4 @@
+import { Toaster } from 'sonner';
 import { Suspense } from 'react';
 import '@szhsin/react-menu/dist/index.css';
 import { Route, Routes } from 'react-router-dom';
@@ -26,6 +27,7 @@ const App = () => {
           <Route path="/conversion/:uuid" element={<Conversion />} />
         </Routes>
       </div>
+      <Toaster position="top-right" />
     </Suspense>
   );
 };

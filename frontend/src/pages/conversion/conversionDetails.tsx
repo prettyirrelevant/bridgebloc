@@ -151,7 +151,7 @@ const ConversionDetails = ({ data }: ConversionDetailsProps) => {
               textTransform: 'capitalize',
             }}
           >
-            {isNaN(Date.parse(data?.created_at)) ? (
+            {Number.isNaN(Date.parse(data?.created_at)) ? (
               <></>
             ) : (
               dayjs(Date.parse(data?.created_at)).format('MMM DD, HH:mm')

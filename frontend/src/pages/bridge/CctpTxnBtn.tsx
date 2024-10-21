@@ -1,17 +1,16 @@
 import {
-  erc20ABI,
+  useClient,
   useAccount,
-  useNetwork,
   useSignMessage,
-  usePublicClient,
-  useContractRead,
-  useSwitchNetwork,
-  useContractWrite,
-  usePrepareContractWrite,
+  useSwitchChain,
+  useReadContract,
+  useWriteContract,
+  useSimulateContract,
 } from 'wagmi';
-import { fromBytes, toBytes } from 'viem';
 import axios from 'axios';
-import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { erc20Abi } from 'viem';
+import { useState } from 'react';
 import { metadata } from 'constants/data';
 import { useApp } from 'context/AppContext';
 import { ClipLoader } from 'react-spinners';
@@ -19,24 +18,27 @@ import { useNetworkState } from 'react-use';
 import { getDomain } from 'helpers/contract';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
+import { evmAddressToBytes32 } from 'utils/address';
 import { crossChainBridgeAbi } from 'contracts/index';
 import { networkContracts } from 'contracts/addresses';
-import { evmAddressToBytes32 } from 'utils/address';
+import { waitForTransactionReceipt } from '@wagmi/core';
+
+import { config } from '../../wagmi-setup';
 
 interface ConversionPayload {
   address: string;
   signature: string;
   data: {
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     [key: string]: any;
   };
 }
 
 const CctpTxnBtn = () => {
-  const { chain } = useNetwork();
   const navigate = useNavigate();
-  const { address } = useAccount();
+  const { address, chain } = useAccount();
   const onlineState = useNetworkState();
-  const { switchNetworkAsync } = useSwitchNetwork();
+  const { switchChainAsync } = useSwitchChain();
   const [confirmingTxn, setConfirmingTxn] = useState(false);
 
   const {
@@ -49,14 +51,11 @@ const CctpTxnBtn = () => {
     setAuthorization,
   } = useApp();
 
-  const publicClient = usePublicClient({
+  const client = useClient({
     chainId: Number(metadata?.[currentChain]?.chain_id),
   });
 
-  const { signMessageAsync, isLoading } = useSignMessage({
-    message:
-      'Message: Welcome to BridgeBloc!\nURI: https://bridgebloc.vercel.app',
-  });
+  const { signMessageAsync, isPending } = useSignMessage();
 
   const getDepositContract = () =>
     networkContracts[currentChain] as `0x${string}`;
@@ -64,34 +63,29 @@ const CctpTxnBtn = () => {
   /**
    * Prepare txn to approve allowance (max amount that can be spent)
    */
-  const { config: approveConfig } = usePrepareContractWrite({
-    abi: erc20ABI,
+  const { data: approveData } = useSimulateContract({
+    abi: erc20Abi,
     functionName: 'approve',
     args: [
       getDepositContract(),
       BigInt(
-        Number(transferAmt ?? 0) *
-          Math.pow(10, Number(currentToken?.decimals ?? 0)),
+        Number(transferAmt ?? 0) * 10 ** Number(currentToken?.decimals ?? 0),
       ),
     ],
     chainId: Number(metadata?.[currentChain]?.chain_id),
     address: currentToken.address as `0x${string}`,
-    enabled:
-      !!currentToken?.address &&
-      !isNaN(Number(transferAmt)) &&
-      Number(transferAmt) > 0,
   });
 
   // Prompt user to set allowance
-  const { isLoading: approving, writeAsync: approveAsync } =
-    useContractWrite(approveConfig);
+  const { isPending: approving, writeContractAsync: approveAsync, isError: isApproveError, error: approveError } =
+    useWriteContract();
 
   /**
    * Read the contract to confirm if the allowed amount is greated than the txn amount
    */
   const { refetch: refetchApprovedAmount, data: approvedAmount } =
-    useContractRead({
-      abi: erc20ABI,
+    useReadContract({
+      abi: erc20Abi,
       functionName: 'allowance',
       args: [address as `0x${string}`, getDepositContract()],
       chainId: Number(metadata?.[currentChain]?.chain_id),
@@ -101,13 +95,11 @@ const CctpTxnBtn = () => {
   /**
    * Prepare txn to send tokens
    */
-  const { config } = usePrepareContractWrite({
+  const { data: depositData } = useSimulateContract({
     ...crossChainBridgeAbi,
     functionName: 'deposit',
     args: [
-      BigInt(
-        Number(transferAmt) * Math.pow(10, Number(currentToken?.decimals ?? 0)),
-      ),
+      BigInt(Number(transferAmt) * 10 ** Number(currentToken?.decimals ?? 0)),
       currentToken?.address as `0x${string}`,
       0, // hardcoding fee here since it's testnet
       evmAddressToBytes32(destinationToken?.address),
@@ -117,16 +109,10 @@ const CctpTxnBtn = () => {
     ],
     chainId: Number(metadata?.[currentChain]?.chain_id),
     address: getDepositContract(),
-    enabled: false
-      // !!currentToken?.address &&
-      // address &&
-      // destinationToken?.address &&
-      // !isNaN(Number(transferAmt)) &&
-      // Number(transferAmt) > 0,
   });
 
   // Prompt user to approve tokens transfer txn
-  const { writeAsync, isLoading: depositLoading } = useContractWrite(config);
+  const { writeContractAsync: depositAsync, isPending: depositLoading, error: depositError, isError: isDepositError } = useWriteContract();
 
   /**
    * Send txn-hash to the server
@@ -134,7 +120,7 @@ const CctpTxnBtn = () => {
   const cctpConversion = useMutation({
     mutationFn: async (payload: ConversionPayload) => {
       return await axios
-        .post(`/conversions/cctp`, payload?.data, {
+        .post('/conversions/cctp', payload?.data, {
           headers: {
             Authorization: `Signature ${payload?.address}:${payload?.signature}`,
           },
@@ -144,15 +130,18 @@ const CctpTxnBtn = () => {
     onSuccess: (data) => {
       navigate(`/conversion/${data?.id}`);
     },
+    onError(error, variables, context) {
+      toast.error(JSON.stringify(error));
+    },
   });
 
   const processConversion = async () => {
     if (
-      isLoading ||
+      isPending ||
       approving ||
       confirmingTxn ||
       depositLoading ||
-      cctpConversion.isLoading
+      cctpConversion.isPending
     )
       return;
 
@@ -164,14 +153,20 @@ const CctpTxnBtn = () => {
       !currentRoute?.chain ||
       !currentToken?.address ||
       !destinationToken?.address ||
-      isNaN(Number(transferAmt))
+      Number.isNaN(transferAmt)
     )
       return;
 
     try {
       const authData = {
         address: authorization.address || address,
-        signature: authorization.signature || (await signMessageAsync()) || '',
+        signature:
+          authorization.signature ||
+          (await signMessageAsync({
+            message:
+              'Message: Welcome to BridgeBloc!\nURI: https://bridgebloc.vercel.app',
+          })) ||
+          '',
       };
 
       if (authData?.signature !== authorization?.signature)
@@ -180,42 +175,52 @@ const CctpTxnBtn = () => {
       const shouldSwitchNetwork =
         chain?.id !== Number(metadata?.[currentChain]?.chain_id);
       if (shouldSwitchNetwork) {
-        await switchNetworkAsync?.(Number(metadata?.[currentChain]?.chain_id));
+        await switchChainAsync?.({
+          chainId: Number(metadata?.[currentChain]?.chain_id),
+        });
       }
 
       if (
         Number(approvedAmount) <
-        BigInt(
-          Number(transferAmt) *
-            Math.pow(10, Number(currentToken?.decimals ?? 0)),
-        )
+        BigInt(Number(transferAmt) * 10 ** Number(currentToken?.decimals ?? 0))
       ) {
-        await approveAsync?.();
+        // biome-ignore lint/style/noNonNullAssertion: <explanation>
+        await approveAsync(approveData!.request);
+        if (isApproveError){
+          toast.error(approveError.message)
+          return
+        }
+
         refetchApprovedAmount();
       }
 
-      const txn = await writeAsync?.();
+      if (isDepositError) {
+        toast.error(depositError.message)
+        return
+      }
 
-      if (txn?.hash) {
+      // biome-ignore lint/style/noNonNullAssertion: <explanation>
+      const txn = await depositAsync(depositData!.request);
+
+      if (txn) {
         setConfirmingTxn(true);
-        await publicClient.waitForTransactionReceipt({
-          hash: txn?.hash,
-        });
-
+        await waitForTransactionReceipt(config, { hash: txn });
         setConfirmingTxn(!true);
 
         cctpConversion.mutate({
           address: authData.address,
           signature: authData.signature,
           data: {
-            tx_hash: txn?.hash,
+            tx_hash: txn,
             source_chain: currentChain,
             destination_chain: currentRoute.chain,
           },
         });
       }
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     } catch (error: any) {
       console.log(error?.message);
+      toast.error(error?.message);
     } finally {
       setConfirmingTxn(false);
     }
@@ -223,6 +228,7 @@ const CctpTxnBtn = () => {
 
   return (
     <button
+      type="button"
       className="primary-btn"
       style={{
         marginTop: '10px',
@@ -230,8 +236,8 @@ const CctpTxnBtn = () => {
       onClick={processConversion}
     >
       Continue
-      {(cctpConversion.isLoading ||
-        isLoading ||
+      {(cctpConversion.isPending ||
+        isPending ||
         confirmingTxn ||
         approving ||
         depositLoading) && (

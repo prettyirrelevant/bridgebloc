@@ -9,21 +9,19 @@ const Conersions = () => {
   const { address } = useAccount();
   const { authorization } = useApp();
 
-  const { data, error, isLoading } = useQuery(
-    ['conversions', authorization?.address, authorization?.signature],
-    async () => {
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['conversions', authorization?.address, authorization?.signature],
+    queryFn: async () => {
       return await axios
-        .get(`conversions`, {
+        .get('conversions', {
           headers: {
             Authorization: `Signature ${authorization?.address}:${authorization?.signature}`,
           },
         })
         .then((response) => response?.data?.data);
     },
-    {
-      enabled: authorization?.address === address && !!authorization?.signature,
-    },
-  );
+    enabled: authorization?.address === address && !!authorization?.signature,
+  });
 
   return (
     <div className="conversions-page">

@@ -19,6 +19,7 @@ const SourceChain = () => {
     isObject: true,
     setDefault: true,
     defaultOption: routes[0],
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     onOptionChange: (option: any) => {
       setCurrentRoute('');
       setCurrentToken({});

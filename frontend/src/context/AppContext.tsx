@@ -10,7 +10,8 @@ import {
   type SetStateAction,
 } from 'react';
 import axios from 'axios';
-import { useAccount, useQuery } from 'wagmi';
+import { useQuery } from '@tanstack/react-query';
+import { useAccount } from 'wagmi';
 import { metadata, tokens } from 'constants/data';
 
 interface AppProviderProps {
@@ -101,18 +102,16 @@ const AppProvider = ({ children }: AppProviderProps) => {
       localStorage.setItem('authorization', JSON.stringify(authorization));
   }, [authorization]);
 
-  const conversions = useQuery(
-    ['tokens'],
-    async () => {
+  const conversions = useQuery({
+    queryKey: ['tokens'],
+    queryFn: async () => {
       return await axios
         .get('conversions/routes')
         .then((response) => response?.data?.data);
     },
-    {
-      refetchOnReconnect: false,
-      refetchOnWindowFocus: false,
-    },
-  );
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+  });
 
   const routes = useMemo(() => {
     const routesArr = Object.keys(conversions.data || {});
